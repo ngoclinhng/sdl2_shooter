@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.11)
 
 project(Shooter C)
 
+list(APPEND CMAKE_MODULE_PATH "${Shooter_SOURCE_DIR}/cmake")
 include(GNUInstallDirs)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${Shooter_BINARY_DIR}/bin)
@@ -11,5 +12,9 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${Shooter_BINARY_DIR}/lib)
 find_package(SDL2 REQUIRED)
 message(STATUS "SDL2_INCLUDE_DIRS: ${SDL2_INCLUDE_DIRS}")
 message(STATUS "SDL2_LIBRARIES: ${SDL2_LIBRARIES}")
+
+find_package(SDL2_image REQUIRED)
+message(STATUS "SDL2_IMAGE_INCLUDE_DIRS: ${SDL2_IMAGE_INCLUDE_DIRS}")
+message(STATUS "SDL2_IMAGE_LIBRARIES: ${SDL2_IMAGE_LIBRARIES}")
 
 add_subdirectory(src/shooter)
