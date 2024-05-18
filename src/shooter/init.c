@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+
 #include "shooter/structs.h"
 #include "shooter/defs.h"
 #include "shooter/init.h"
@@ -7,8 +9,14 @@
 extern struct Shooter g_shooter;
 
 void initSDL(void) {
+  const int windowFlags = SDL_WINDOW_SHOWN;
+  const int rendererFlags = SDL_RENDERER_ACCELERATED;  
+  const int imgFlags = IMG_INIT_PNG | IMG_INIT_JPG;
+
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-    SDL_Log("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+		 "SDL could not initialize! SDL_Error: %s\n",
+		 SDL_GetError());
     exit(1);
   }
 
@@ -17,10 +25,12 @@ void initSDL(void) {
 				      SDL_WINDOWPOS_UNDEFINED,
 				      SHOOTER_WINDOW_WIDTH,
 				      SHOOTER_WINDOW_HEIGHT,
-				      SDL_WINDOW_SHOWN);
+				      windowFlags);
 
   if (!g_shooter.window) {
-    SDL_Log("Window could not be created! SDL_Error: %s\n", SDL_GetError());
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+		 "Window could not be created! SDL_Error: %s\n",
+		 SDL_GetError());
     exit(1);
   }
 
@@ -28,15 +38,31 @@ void initSDL(void) {
 
   g_shooter.renderer = SDL_CreateRenderer(g_shooter.window,
 					  -1,
-					  SDL_RENDERER_ACCELERATED);
+					  rendererFlags);
+
   if (!g_shooter.renderer) {
-    SDL_Log("Renderer could not be created! SDL_Error: %s\n", SDL_GetError());
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+		 "Renderer could not be created! SDL_Error: %s\n",
+		 SDL_GetError());
     exit(1);
-  }  
+  }
+
+  if ((IMG_Init(imgFlags) & imgFlags) != imgFlags) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+		 "SDL_image could not initialize! SDL_image error: %s\n",
+		 IMG_GetError());
+    exit(1);
+  }
 }
 
 void cleanup(void) {
+  SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Cleaning up....\n");
+
   SDL_DestroyRenderer(g_shooter.renderer);
   SDL_DestroyWindow(g_shooter.window);
+
+  IMG_Quit();
   SDL_Quit();
+  
+  SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Done!\n");
 }
