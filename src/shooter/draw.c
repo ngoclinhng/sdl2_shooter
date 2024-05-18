@@ -2,13 +2,13 @@
 #include "shooter/structs.h"
 #include "shooter/draw.h"
 
-extern struct Shooter shooter;
+extern struct Shooter g_shooter;
 
 void prepareScene(void) {
-  SDL_SetRenderDrawColor(shooter.renderer, 96, 128, 255, 255);
-  SDL_RenderClear(shooter.renderer);
+  SDL_SetRenderDrawColor(g_shooter.renderer, 96, 128, 255, 255);
+  SDL_RenderClear(g_shooter.renderer);
 }
 
 void presentScene(void) {
-  SDL_RenderPresent(shooter.renderer);
+  SDL_RenderPresent(g_shooter.renderer);
 }

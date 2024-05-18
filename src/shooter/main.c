@@ -7,10 +7,10 @@
 #include "shooter/input.h"
 #include "shooter/draw.h"
 
-struct Shooter shooter;
+struct Shooter g_shooter;
 
 int main(void) {
-  memset(&shooter, 0, sizeof(shooter));
+  memset(&g_shooter, 0, sizeof(g_shooter));
   initSDL();
   atexit(cleanup);
 
