@@ -7,6 +7,9 @@ if (SDL2_FOUND)
 endif()
 
 set(SHOOTER_SRCS
+  init.c
+  input.c
+  draw.c
   main.c)
 
 add_executable(shooter ${SHOOTER_SRCS})
