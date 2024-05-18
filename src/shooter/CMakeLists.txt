@@ -26,3 +26,12 @@ target_include_directories(shooter PRIVATE
 
 target_link_libraries(shooter PRIVATE
   ${SHOOTER_PRIVATE_DEPENDENCIES})
+
+set(GFX_SOURCE_DIR "${Shooter_SOURCE_DIR}/gfx")
+set(GFX_OUTPUT_DIR "${CMAKE_BINARY_DIR}/gfx")
+
+add_custom_target(copy_gfx ALL
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${GFX_SOURCE_DIR} ${GFX_OUTPUT_DIR}
+  COMMENT "Copying gfx directory to build directory")
+
+add_dependencies(shooter copy_gfx)
