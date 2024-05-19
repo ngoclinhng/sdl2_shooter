@@ -7,7 +7,7 @@
 extern struct Shooter g_shooter;
 
 void prepareScene(void) {
-  SDL_SetRenderDrawColor(g_shooter.renderer, 96, 128, 255, 255);
+  SDL_SetRenderDrawColor(g_shooter.renderer, 32, 32, 32, 255);
   SDL_RenderClear(g_shooter.renderer);
 }
 
