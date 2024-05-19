@@ -14,8 +14,10 @@ endif()
 
 set(SHOOTER_SRCS
   init.c
+  asset_loader.c
   input.c
   draw.c
+  stage.c
   main.c)
 
 add_executable(shooter ${SHOOTER_SRCS})

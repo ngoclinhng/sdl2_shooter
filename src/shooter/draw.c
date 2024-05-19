@@ -4,32 +4,15 @@
 #include "shooter/structs.h"
 #include "shooter/draw.h"
 
-extern struct Shooter g_shooter;
+extern struct GameEngine g_gameEngine;
 
 void prepareScene(void) {
-  SDL_SetRenderDrawColor(g_shooter.renderer, 32, 32, 32, 255);
-  SDL_RenderClear(g_shooter.renderer);
+  SDL_SetRenderDrawColor(g_gameEngine.renderer, 32, 32, 32, 255);
+  SDL_RenderClear(g_gameEngine.renderer);
 }
 
 void presentScene(void) {
-  SDL_RenderPresent(g_shooter.renderer);
-}
-
-SDL_Texture* loadTexture(const char* filename) {
-  if (!filename) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "filename is NULL");
-    return NULL;
-  }
-
-  SDL_Texture* newTexture = IMG_LoadTexture(g_shooter.renderer, filename);
-
-  if (!newTexture) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-		 "Unable to load texture from %s: %s\n",
-		 filename, IMG_GetError());
-  }
-
-  return newTexture;
+  SDL_RenderPresent(g_gameEngine.renderer);
 }
 
 void blit(SDL_Texture* texture, int x, int y) {
@@ -37,5 +20,5 @@ void blit(SDL_Texture* texture, int x, int y) {
   SDL_QueryTexture(texture, NULL, NULL, &width, &height);
   
   SDL_Rect destRect = {x, y, width, height};  
-  SDL_RenderCopy(g_shooter.renderer, texture, NULL, &destRect);
+  SDL_RenderCopy(g_gameEngine.renderer, texture, NULL, &destRect);
 }

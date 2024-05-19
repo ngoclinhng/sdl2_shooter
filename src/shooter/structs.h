@@ -3,25 +3,46 @@
 
 #include <SDL2/SDL.h>
 
-struct Shooter {
-  SDL_Renderer *renderer;
-  SDL_Window *window;
-
-  int up;
-  int down;
-  int left;
-  int right;
-
-  int fire;
+enum GameAction {
+  ACTION_UP,
+  ACTION_DOWN,
+  ACTION_LEFT,
+  ACTION_RIGHT,
+  ACTION_FIRE,
+  ACTION_COUNT
 };
 
-struct Entity {
-  int x;
-  int y;
-  int dx;
-  int dy;
+struct GameDelegate {
+  void (*handleLogic)(void);
+  void (*handleDraw)(void);
+};
+
+struct GameEngine {
+  SDL_Renderer *renderer;
+  SDL_Window *window;
+  
+  int actionStates[ACTION_COUNT];
+  struct GameDelegate delegate;
+};
+
+struct GameEntity {
+  float x, y;
+  int w, h;
+  float dx, dy;  
+
   int health;
-  SDL_Texture* texture;  
+  int reload;
+  
+  SDL_Texture* texture;
+  struct GameEntity* next;
+};
+
+struct GameStage {
+  struct GameEntity fightersHead;
+  struct GameEntity* fightersTail;
+  
+  struct GameEntity bulletsHead;
+  struct GameEntity* bulletsTail;
 };
 
 #endif // SHOOTER_STRUCTS_H_
