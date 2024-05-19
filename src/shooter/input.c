@@ -23,6 +23,10 @@ void updateShooterMovement(SDL_Keycode key, int state) {
   case SDLK_RIGHT:
     g_shooter.right = state;
     break;
+
+  case SDLK_LCTRL:
+    g_shooter.fire = state;
+    break;
     
   default: break;
   }

@@ -11,12 +11,17 @@ struct Shooter {
   int down;
   int left;
   int right;
+
+  int fire;
 };
 
 struct Entity {
   int x;
   int y;
-  SDL_Texture* texture;
+  int dx;
+  int dy;
+  int health;
+  SDL_Texture* texture;  
 };
 
 #endif // SHOOTER_STRUCTS_H_
