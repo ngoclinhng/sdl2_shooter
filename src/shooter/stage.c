@@ -68,11 +68,11 @@ static void handlePlayerLogic(void) {
   }
 
   if (g_gameEngine.actionStates[ACTION_LEFT]) {
-    player.dx = PLAYER_SPEED;
+    player.dx = -PLAYER_SPEED;
   }
 
   if (g_gameEngine.actionStates[ACTION_RIGHT]) {
-    player.dx = -PLAYER_SPEED;
+    player.dx = PLAYER_SPEED;
   }
 
   if (g_gameEngine.actionStates[ACTION_FIRE] && player.reload == 0) {
