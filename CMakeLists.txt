@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.11)
 
 project(Shooter C)
 
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED TRUE)
+
 list(APPEND CMAKE_MODULE_PATH "${Shooter_SOURCE_DIR}/cmake")
 include(GNUInstallDirs)
 
