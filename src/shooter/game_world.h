@@ -3,12 +3,11 @@
 
 #include "shooter/input_manager.h"
 #include "shooter/texture_manager.h"
+#include "shooter/entity.h"
 
-struct Entity {
-  float x, y;
-  float dx, dy;
-  int w, h;
-  enum TextureType textureType;
+enum BulletOrigin {
+  BULLET_FROM_PLAYER,
+  BULLET_FROM_ENEMY
 };
 
 struct Player {
@@ -25,6 +24,7 @@ struct Enemy {
 
 struct Bullet {
   struct Entity entity;
+  enum BulletOrigin origin;
   struct Bullet* next;
 };
 
@@ -36,6 +36,18 @@ struct GameWorld {
   struct InputManager inputManager;
   struct TextureManager textureManager;
 };
+
+#define GAME_WORLD_ADD_BULLET(game, bullet)	\
+  do {						\
+    (game)->bulletTail->next = (bullet);	\
+    (game)->bulletTail = (bullet);		\
+  } while (0)
+
+#define GAME_WORLD_ADD_ENEMY(game, enemy)	\
+  do {						\
+    (game)->enemyTail->next = (enemy);		\
+    (game)->enemyTail = (enemy);		\
+  } while (0)
 
 void GameWorld_Init(struct GameWorld* game);
 void GameWorld_PrepareScene(void);

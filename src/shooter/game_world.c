@@ -10,6 +10,15 @@ static SDL_Window* window;
 static SDL_Renderer* renderer;
 static int enemySpawnTimer;
 
+#define LOAD_TEXTURE_FOR_ENTITY(game, entity, type)	\
+  do {							\
+    TextureManager_Load(&((game)->textureManager),	\
+		        (type),				\
+			&((entity)->w),			\
+			&(entity)->h);			\
+    (entity)->textureType = (type);			\
+  } while (0)
+
 static void initSDL(void);
 static void initPlayer(struct GameWorld* game);
 
@@ -90,48 +99,44 @@ void GameWorld_Destroy(struct GameWorld* game) {
 
 static void initPlayer(struct GameWorld* game) {
   SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "initPlayer\n");
-  struct Entity* entity = &game->player.entity;
-  struct TextureManager* tm = &game->textureManager;
 
-  entity->x = 100;
-  entity->y = 100;
-  entity->textureType = TEXTURE_PLAYER;
-  TextureManager_GetSize(tm, entity->textureType, &entity->w, &entity->h);
+  struct Player* player = &game->player;
 
-  game->player.health = 1;
-  game->player.reloadTime = 0;
+  LOAD_TEXTURE_FOR_ENTITY(game, &player->entity, TEXTURE_PLAYER);
+  ENTITY_SET_POSITION(&player->entity, 100.0f, 100.0f);
+  
+  player->health = 1;
+  player->reloadTime = 0;
 }
 
 static void updatePlayer(struct GameWorld* game) {
+  const struct InputManager* im = &game->inputManager;
   struct Player* player = &game->player;
-  const struct InputManager* inputManager = &game->inputManager;
 
-  player->entity.dx = 0;
-  player->entity.dy = 0;
+  ENTITY_SET_VELOCITY(&player->entity, 0.0f, 0.0f);  
   player->reloadTime--;
 
-  if (inputManager->gameActions[GAME_ACTION_UP]) {
-    player->entity.dy = -PLAYER_SPEED;
+  if (im->gameActions[GAME_ACTION_UP]) {
+    ENTITY_SET_VELOCITY_Y(&player->entity, -PLAYER_SPEED);
   }
 
-  if (inputManager->gameActions[GAME_ACTION_DOWN]) {
-    player->entity.dy = PLAYER_SPEED;
+  if (im->gameActions[GAME_ACTION_DOWN]) {
+    ENTITY_SET_VELOCITY_Y(&player->entity, PLAYER_SPEED);
   }
 
-  if (inputManager->gameActions[GAME_ACTION_LEFT]) {
-    player->entity.dx = -PLAYER_SPEED;
+  if (im->gameActions[GAME_ACTION_LEFT]) {
+    ENTITY_SET_VELOCITY_X(&player->entity, -PLAYER_SPEED);
   }
 
-  if (inputManager->gameActions[GAME_ACTION_RIGHT]) {
-    player->entity.dx = PLAYER_SPEED;
+  if (im->gameActions[GAME_ACTION_RIGHT]) {
+    ENTITY_SET_VELOCITY_X(&player->entity, PLAYER_SPEED);
   }
 
-  if (inputManager->gameActions[GAME_ACTION_FIRE] && player->reloadTime <= 0) {
+  if (im->gameActions[GAME_ACTION_FIRE] && player->reloadTime <= 0) {
     fireBullet(game);
   }
 
-  player->entity.x += player->entity.dx;
-  player->entity.y += player->entity.dy;  
+  ENTITY_MOVE(&player->entity);
 }
 
 static void fireBullet(struct GameWorld* game) {
@@ -144,21 +149,11 @@ static void fireBullet(struct GameWorld* game) {
   bullet = malloc(bulletSize);
   memset(bullet, 0, bulletSize);
 
-  bullet->entity.textureType = TEXTURE_PLAYER_BULLET;
-  TextureManager_GetSize(&game->textureManager,
-			 bullet->entity.textureType,
-			 &bullet->entity.w, &bullet->entity.h);
+  LOAD_TEXTURE_FOR_ENTITY(game, &bullet->entity, TEXTURE_PLAYER_BULLET);  
+  ENTITY_SET_POSITION_RELATIVE(&bullet->entity, &player->entity);
+  ENTITY_SET_VELOCITY(&bullet->entity, PLAYER_BULLET_SPEED, 0.0f);  
 
-
-  float offsetY = (player->entity.h / 2) - (bullet->entity.h / 2);
-  
-  bullet->entity.x = player->entity.x;
-  bullet->entity.y = player->entity.y + offsetY;
-  bullet->entity.dx = PLAYER_BULLET_SPEED;
-
-  game->bulletTail->next = bullet;
-  game->bulletTail = bullet;
-
+  GAME_WORLD_ADD_BULLET(game, bullet);
   player->reloadTime = 8;
 }
 
@@ -167,8 +162,7 @@ static void updateBullets(struct GameWorld* game) {
   prev = &game->bulletHead;
 
   for (b = game->bulletHead.next; b != NULL; b = b->next) {
-    b->entity.x += b->entity.dx;
-    b->entity.y += b->entity.dy;
+    ENTITY_MOVE(&b->entity);
 
     if (b->entity.x > WINDOW_WIDTH) {
       if (b == game->bulletTail) {
@@ -196,20 +190,12 @@ static void spawnEnemy(struct GameWorld* game) {
     enemy = malloc(enemySize);
     memset(enemy, 0, enemySize);
 
-    enemy->entity.x = WINDOW_WIDTH;
-    enemy->entity.y = rand() % WINDOW_HEIGHT;
+    LOAD_TEXTURE_FOR_ENTITY(game, &enemy->entity, TEXTURE_ENEMY);
+    ENTITY_SET_POSITION(&enemy->entity, WINDOW_WIDTH, rand() % WINDOW_HEIGHT);
+    ENTITY_SET_VELOCITY(&enemy->entity, -(2 + (rand() % 4)), 0.0f);
+    GAME_WORLD_ADD_ENEMY(game, enemy);
 
-    enemy->entity.textureType = TEXTURE_ENEMY;
-    TextureManager_GetSize(&game->textureManager,
-			   enemy->entity.textureType,
-			   &enemy->entity.w,
-			   &enemy->entity.h);
-
-    enemy->entity.dx = -(2 + (rand() % 4));
     enemySpawnTimer = 30 + (rand() % 60);
-
-    game->enemyTail->next = enemy;
-    game->enemyTail = enemy;
   }
 }
 
@@ -218,8 +204,7 @@ static void updateEnemies(struct GameWorld* game) {
   prev = &game->enemyHead;
 
   for (e = game->enemyHead.next; e != NULL; e = e->next) {
-    e->entity.x += e->entity.dx;
-    e->entity.y += e->entity.dy;
+    ENTITY_MOVE(&e->entity);
 
     if (e->entity.x < 0) {
       if (e == game->enemyTail) {

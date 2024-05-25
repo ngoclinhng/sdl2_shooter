@@ -18,13 +18,13 @@ struct TextureManager {
 void TextureManager_Init(struct TextureManager* self,
 			 SDL_Renderer* renderer);
 
-void TextureManager_GetSize(struct TextureManager* self,
-			    enum TextureType type,
-			    int* width, int* height);
+void TextureManager_Load(struct TextureManager* self,
+			 enum TextureType type,
+			 int* width, int* height);
 
 void TextureManager_Render(struct TextureManager* self,
 			   enum TextureType type,
-			   int x, int y);
+			   float x, float y);
 
 void TextureManager_Destroy(struct TextureManager* self);
 

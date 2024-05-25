@@ -16,6 +16,7 @@ set(SHOOTER_SRCS
   frame_rate.c
   input_manager.c
   texture_manager.c
+  entity.c
   game_world.c
   main.c)
 

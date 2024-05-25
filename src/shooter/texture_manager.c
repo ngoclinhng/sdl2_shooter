@@ -8,8 +8,8 @@ static const char* const textureFileNames[TEXTURE_COUNT] = {
   "gfx/enemy.png"
 };
 
-static SDL_Texture* TextureManager_Load(struct TextureManager* self,
-					enum TextureType type);
+static SDL_Texture* loadTexture(struct TextureManager* self,
+				enum TextureType type);
 
 void TextureManager_Init(struct TextureManager* self,
 			 SDL_Renderer* renderer) {
@@ -17,10 +17,10 @@ void TextureManager_Init(struct TextureManager* self,
   self->renderer = renderer;
 }
 
-void TextureManager_GetSize(struct TextureManager* self,
-			    enum TextureType type,
-			    int* width, int* height) {
-  SDL_Texture* texture = TextureManager_Load(self, type);
+void TextureManager_Load(struct TextureManager* self,
+			 enum TextureType type,
+			 int* width, int* height) {
+  SDL_Texture* texture = loadTexture(self, type);
 
   if (!texture)  {
     return;
@@ -30,9 +30,9 @@ void TextureManager_GetSize(struct TextureManager* self,
 }
 
 void TextureManager_Render(struct TextureManager* self,
-			   enum TextureType type,
-			   int x, int y) {
-  SDL_Texture* texture = TextureManager_Load(self, type);
+			   enum TextureType textureType,
+			   float x, float y) {
+  SDL_Texture* texture = loadTexture(self, textureType);
 
   if (!texture) {
     return;
@@ -52,8 +52,8 @@ void TextureManager_Destroy(struct TextureManager* self) {
   }
 }
 
-static SDL_Texture* TextureManager_Load(struct TextureManager* self,
-					enum TextureType type) {
+static SDL_Texture* loadTexture(struct TextureManager* self,
+				enum TextureType type) {
   if (type < 0 || type >= TEXTURE_COUNT) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Invalid texture type\n");
     return NULL;
