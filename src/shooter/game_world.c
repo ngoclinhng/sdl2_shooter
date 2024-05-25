@@ -8,14 +8,21 @@
 
 static SDL_Window* window;
 static SDL_Renderer* renderer;
+static int enemySpawnTimer;
 
 static void initSDL(void);
 static void initPlayer(struct GameWorld* game);
+
 static void updatePlayer(struct GameWorld* game);
 static void updateBullets(struct GameWorld* game);
 static void fireBullet(struct GameWorld* game);
+static void spawnEnemy(struct GameWorld* game);
+static void updateEnemies(struct GameWorld* game);
+
 static void drawPlayer(struct GameWorld* game);
 static void drawBullets(struct GameWorld* game);
+static void drawEnemies(struct GameWorld* game);
+
 static void destroyBullets(struct GameWorld* game);
 static void destroyEnemies(struct GameWorld* game);
 
@@ -30,6 +37,7 @@ void GameWorld_Init(struct GameWorld* game) {
 
   game->enemyTail = &game->enemyHead;
   game->bulletTail = &game->bulletHead;
+  enemySpawnTimer = 0;
 }
 
 void GameWorld_PrepareScene(void) {
@@ -47,11 +55,15 @@ void GameWorld_Update(struct GameWorld* game) {
   
   updatePlayer(game);
   updateBullets(game);
+
+  spawnEnemy(game);
+  updateEnemies(game);
 }
 
 void GameWorld_Draw(struct GameWorld* game) {
   drawPlayer(game);
   drawBullets(game);
+  drawEnemies(game);
 }
 
 void GameWorld_PresentScene(void) {
@@ -174,6 +186,57 @@ static void updateBullets(struct GameWorld* game) {
   }
 }
 
+static void spawnEnemy(struct GameWorld* game) {
+  struct Enemy* enemy;
+  size_t enemySize = sizeof(struct Enemy);
+  
+  if (--enemySpawnTimer <= 0) {
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "spawnEnemy\n");
+
+    enemy = malloc(enemySize);
+    memset(enemy, 0, enemySize);
+
+    enemy->entity.x = WINDOW_WIDTH;
+    enemy->entity.y = rand() % WINDOW_HEIGHT;
+
+    enemy->entity.textureType = TEXTURE_ENEMY;
+    TextureManager_GetSize(&game->textureManager,
+			   enemy->entity.textureType,
+			   &enemy->entity.w,
+			   &enemy->entity.h);
+
+    enemy->entity.dx = -(2 + (rand() % 4));
+    enemySpawnTimer = 30 + (rand() % 60);
+
+    game->enemyTail->next = enemy;
+    game->enemyTail = enemy;
+  }
+}
+
+static void updateEnemies(struct GameWorld* game) {
+  struct Enemy *e, *prev;
+  prev = &game->enemyHead;
+
+  for (e = game->enemyHead.next; e != NULL; e = e->next) {
+    e->entity.x += e->entity.dx;
+    e->entity.y += e->entity.dy;
+
+    if (e->entity.x < 0) {
+      if (e == game->enemyTail) {
+	game->enemyTail = prev;
+      }
+
+      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Free an enemy\n");
+      
+      prev->next = e->next;
+      free(e);
+      e = prev;
+    }
+
+    prev = e;
+  }
+}
+
 static void drawPlayer(struct GameWorld* game) {
   TextureManager_Render(&game->textureManager,
 			game->player.entity.textureType,
@@ -189,6 +252,17 @@ static void drawBullets(struct GameWorld* game) {
 			  b->entity.textureType,
 			  b->entity.x,
 			  b->entity.y);
+  }
+}
+
+static void drawEnemies(struct GameWorld* game) {
+  struct Enemy* e;
+
+  for (e = game->enemyHead.next; e != NULL; e = e->next) {
+    TextureManager_Render(&game->textureManager,
+			  e->entity.textureType,
+			  e->entity.x,
+			  e->entity.y);
   }
 }
 
