@@ -13,11 +13,9 @@ if (SDL2_IMAGE_FOUND)
 endif()
 
 set(SHOOTER_SRCS
-  init.c
-  asset_loader.c
-  input.c
-  draw.c
-  stage.c
+  input_manager.c
+  texture_manager.c
+  game_world.c
   main.c)
 
 add_executable(shooter ${SHOOTER_SRCS})

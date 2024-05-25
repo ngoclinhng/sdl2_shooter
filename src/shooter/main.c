@@ -1,35 +1,28 @@
 #include <stdlib.h>
-#include <string.h>
 #include <SDL2/SDL.h>
+#include "shooter/game_world.h"
 
-#include "shooter/structs.h"
-#include "shooter/init.h"
-#include "shooter/input.h"
-#include "shooter/draw.h"
-#include "shooter/stage.h"
+struct GameWorld g_gameWorld;
 
-struct GameEngine g_gameEngine;
-struct GameStage g_gameStage;
+static void cleanup(void);
 
 int main(void) {
-  memset(&g_gameEngine, 0, sizeof(struct GameEngine));
-  
-  initSDL();  
+  GameWorld_Init(&g_gameWorld);
   atexit(cleanup);
 
-  initGameStage();
+  while (1) {
+    GameWorld_PrepareScene();    
 
-  while (1) {        
-    prepareScene();    
-    processEvents();
+    GameWorld_Update(&g_gameWorld);
+    GameWorld_Draw(&g_gameWorld);    
 
-    g_gameEngine.delegate.handleLogic();
-    g_gameEngine.delegate.handleDraw();
-    
-    presentScene();    
+    GameWorld_PresentScene();
     SDL_Delay(16);
   }
 
   return 0;
 }
 
+static void cleanup(void) {
+  GameWorld_Destroy(&g_gameWorld);
+}
