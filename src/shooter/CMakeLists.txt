@@ -13,6 +13,7 @@ if (SDL2_IMAGE_FOUND)
 endif()
 
 set(SHOOTER_SRCS
+  frame_rate.c
   input_manager.c
   texture_manager.c
   game_world.c
