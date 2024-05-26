@@ -1,19 +1,9 @@
 #include "shooter/entity.h"
 
-#define LEFT(entity) ((entity)->x)
-#define RIGHT(entity) ((entity)->x + (entity)->w)
-#define TOP(entity) ((entity)->y)
-#define BOTTOM(entity) ((entity)->y + (entity)->h)
-
 bool Entity_HasCollided(const struct Entity* entity1,
 			const struct Entity* entity2) {
-  return LEFT(entity1) < RIGHT(entity2) &&
-    RIGHT(entity1) > LEFT(entity2) &&
-    TOP(entity1) < BOTTOM(entity2) &&
-    BOTTOM(entity1) > TOP(entity2);
+  return ENTITY_LEFT(entity1) < ENTITY_RIGHT(entity2) &&
+    ENTITY_RIGHT(entity1) > ENTITY_LEFT(entity2) &&
+    ENTITY_TOP(entity1) < ENTITY_BOTTOM(entity2) &&
+    ENTITY_BOTTOM(entity1) > ENTITY_TOP(entity2);
 }
-
-#undef LEFT
-#undef RIGHT
-#undef TOP
-#undef BOTTOM

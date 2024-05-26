@@ -11,38 +11,56 @@ struct Entity {
   enum TextureType textureType;
 };
 
-#define ENTITY_SET_POSITION(entity, X, Y)	\
+#define ENTITY_LEFT(E) ((E)->x)
+#define ENTITY_RIGHT(E) ((E)->x + (E)->w)
+#define ENTITY_TOP(E) ((E)->y)
+#define ENTITY_BOTTOM(E) ((E)->y + (E)->h)
+
+#define ENTITY_WIDTH(E) ((E)->w)
+#define ENTITY_HEIGHT(E) ((E)->h)
+
+#define ENTITY_SET_POSITION(E, X, Y)		\
   do {						\
-    (entity)->x = (X);				\
-    (entity)->y = (Y);				\
+    (E)->x = (X);				\
+    (E)->y = (Y);				\
   } while (0)
 
-#define ENTITY_SET_POSITION_RELATIVE(e1, e2)		\
+#define ENTITY_SET_HORIZONTAL_POSITION(E, X)	\
+  do {						\
+    (E)->x = (X);				\
+  } while (0)
+
+#define ENTITY_SET_VERTICAL_POSITION(E, Y)	\
+  do {						\
+    (E)->y = (Y);				\
+  } while (0)
+
+#define ENTITY_SET_POSITION_RELATIVE(E1, E2)		\
   do {							\
-    (e1)->x = (e2)->x;					\
-    (e1)->y = (e2)->y + ((e2)->h / 2) - ((e1)->h / 2);	\
+    (E1)->x = (E2)->x;					\
+    (E1)->y = (E2)->y + ((E2)->h / 2) - ((E1)->h / 2);	\
   } while (0)
 
-#define ENTITY_SET_VELOCITY(entity, DX, DY)	\
+#define ENTITY_SET_VELOCITY(E, DX, DY)		\
   do {						\
-    (entity)->dx = (DX);			\
-    (entity)->dy = (DY);			\
+    (E)->dx = (DX);				\
+    (E)->dy = (DY);				\
   } while (0)
 
-#define ENTITY_SET_VELOCITY_X(entity, DX)	\
+#define ENTITY_SET_HORIZONTAL_VELOCITY(E, DX)	\
   do {						\
-    (entity)->dx = (DX);			\
+    (E)->dx = (DX);				\
   } while (0)
 
-#define ENTITY_SET_VELOCITY_Y(entity, DY)	\
+#define ENTITY_SET_VERTICAL_VELOCITY(E, DY)	\
   do {						\
-    (entity)->dy = (DY);			\
+    (E)->dy = (DY);				\
   } while (0)
 
-#define ENTITY_MOVE(entity)			\
+#define ENTITY_MOVE(E)				\
   do {						\
-    (entity)->x += (entity)->dx;		\
-    (entity)->y += (entity)->dy;		\
+    (E)->x += (E)->dx;				\
+    (E)->y += (E)->dy;				\
   } while (0)
 
 bool Entity_HasCollided(const struct Entity* e1,

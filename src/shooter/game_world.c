@@ -31,6 +31,7 @@ static void updateBullets(struct GameWorld* game);
 static void fireBullet(struct GameWorld* game);
 static void spawnEnemy(struct GameWorld* game);
 static void updateEnemies(struct GameWorld* game);
+static void ensureEntityStaysInLeftHalfOfScreen(struct Entity *entity);
 
 static bool checkBulletHit(struct GameWorld* game,
 			   const struct Bullet* bullet);
@@ -126,23 +127,27 @@ static void updatePlayer(struct GameWorld* game) {
   const struct InputManager* im = &game->inputManager;
   struct Player* player = &game->player;
 
+  if (player == NULL) {
+    return;
+  }
+
   ENTITY_SET_VELOCITY(&player->entity, 0.0f, 0.0f);  
   player->reloadTime--;
 
   if (im->gameActions[GAME_ACTION_UP]) {
-    ENTITY_SET_VELOCITY_Y(&player->entity, -SHOOTER_PLAYER_SPEED);
+    ENTITY_SET_VERTICAL_VELOCITY(&player->entity, -SHOOTER_PLAYER_SPEED);
   }
 
   if (im->gameActions[GAME_ACTION_DOWN]) {
-    ENTITY_SET_VELOCITY_Y(&player->entity, SHOOTER_PLAYER_SPEED);
+    ENTITY_SET_VERTICAL_VELOCITY(&player->entity, SHOOTER_PLAYER_SPEED);
   }
 
   if (im->gameActions[GAME_ACTION_LEFT]) {
-    ENTITY_SET_VELOCITY_X(&player->entity, -SHOOTER_PLAYER_SPEED);
+    ENTITY_SET_HORIZONTAL_VELOCITY(&player->entity, -SHOOTER_PLAYER_SPEED);
   }
 
   if (im->gameActions[GAME_ACTION_RIGHT]) {
-    ENTITY_SET_VELOCITY_X(&player->entity, SHOOTER_PLAYER_SPEED);
+    ENTITY_SET_HORIZONTAL_VELOCITY(&player->entity, SHOOTER_PLAYER_SPEED);
   }
 
   if (im->gameActions[GAME_ACTION_FIRE] && player->reloadTime <= 0) {
@@ -150,6 +155,24 @@ static void updatePlayer(struct GameWorld* game) {
   }
 
   ENTITY_MOVE(&player->entity);
+  ensureEntityStaysInLeftHalfOfScreen(&player->entity);
+}
+
+static void ensureEntityStaysInLeftHalfOfScreen(struct Entity *e) {
+  const float upperBoundX = SHOOTER_WINDOW_WIDTH / 2;
+  const float upperBoundY = SHOOTER_WINDOW_HEIGHT;
+  
+  if (ENTITY_LEFT(e) < 0) {
+    ENTITY_SET_HORIZONTAL_POSITION(e, -0.0f);
+  } else if (ENTITY_RIGHT(e) > upperBoundX) {
+    ENTITY_SET_HORIZONTAL_POSITION(e, upperBoundX - ENTITY_WIDTH(e));
+  }
+
+  if (ENTITY_TOP(e) < 0) {
+    ENTITY_SET_VERTICAL_POSITION(e, -0.0f);
+  } else if (ENTITY_BOTTOM(e) > upperBoundY) {
+    ENTITY_SET_VERTICAL_POSITION(e, upperBoundY - ENTITY_HEIGHT(e));
+  }
 }
 
 static void fireBullet(struct GameWorld* game) {
