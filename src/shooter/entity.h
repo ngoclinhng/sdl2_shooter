@@ -37,7 +37,7 @@ struct Entity {
 
 #define ENTITY_SET_POSITION_RELATIVE(E1, E2)		\
   do {							\
-    (E1)->x = (E2)->x;					\
+    (E1)->x = (E2)->x + ((E2)->w / 2) - ((E1)->w / 2);	\
     (E1)->y = (E2)->y + ((E2)->h / 2) - ((E1)->h / 2);	\
   } while (0)
 

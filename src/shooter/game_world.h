@@ -19,6 +19,7 @@ struct Player {
 struct Enemy {
   struct Entity entity;
   int health;
+  int reloadTime;
   struct Enemy* next;
 };
 

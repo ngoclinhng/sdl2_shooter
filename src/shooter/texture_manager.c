@@ -5,7 +5,8 @@
 static const char* const textureFileNames[TEXTURE_COUNT] = {
   "gfx/player.png",
   "gfx/playerBullet.png",
-  "gfx/enemy.png"
+  "gfx/enemy.png",
+  "gfx/enemyBullet.png"
 };
 
 static SDL_Texture* loadTexture(struct TextureManager* self,
