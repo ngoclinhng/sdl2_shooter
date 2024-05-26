@@ -45,6 +45,7 @@ static void updateGameActions(struct InputManager* im,
     break;
 
   case SDLK_LCTRL:
+  case SDLK_SPACE:
     im->gameActions[GAME_ACTION_FIRE] = isPressed;
     break;
     

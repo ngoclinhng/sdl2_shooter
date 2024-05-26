@@ -19,6 +19,10 @@ static int enemySpawnTimer;
     (entity)->textureType = (type);			\
   } while (0)
 
+#define IS_ENEMY_OFF_SCREEN(E) ((E)->entity.x < -(E)->entity.w)
+#define IS_ENEMY_DEAD(E) ((E)->health == 0)
+#define IS_BULLET_OFF_SCREEN(B) ((B)->entity.x > WINDOW_WIDTH)
+
 static void initSDL(void);
 static void initPlayer(struct GameWorld* game);
 
@@ -27,6 +31,15 @@ static void updateBullets(struct GameWorld* game);
 static void fireBullet(struct GameWorld* game);
 static void spawnEnemy(struct GameWorld* game);
 static void updateEnemies(struct GameWorld* game);
+
+static bool checkBulletHit(struct GameWorld* game,
+			   const struct Bullet* bullet);
+
+static bool checkBulletHitPlayer(struct GameWorld* game,
+				 const struct Bullet* bullet);
+
+static bool checkBulletHitEnemy(struct GameWorld* game,
+				const struct Bullet* bullet);
 
 static void drawPlayer(struct GameWorld* game);
 static void drawBullets(struct GameWorld* game);
@@ -153,6 +166,7 @@ static void fireBullet(struct GameWorld* game) {
   ENTITY_SET_POSITION_RELATIVE(&bullet->entity, &player->entity);
   ENTITY_SET_VELOCITY(&bullet->entity, PLAYER_BULLET_SPEED, 0.0f);  
 
+  bullet->origin = BULLET_FROM_PLAYER;
   GAME_WORLD_ADD_BULLET(game, bullet);
   player->reloadTime = 8;
 }
@@ -164,7 +178,7 @@ static void updateBullets(struct GameWorld* game) {
   for (b = game->bulletHead.next; b != NULL; b = b->next) {
     ENTITY_MOVE(&b->entity);
 
-    if (b->entity.x > WINDOW_WIDTH) {
+    if (IS_BULLET_OFF_SCREEN(b) || checkBulletHit(game, b)) {
       if (b == game->bulletTail) {
 	game->bulletTail = prev;
       }
@@ -180,6 +194,40 @@ static void updateBullets(struct GameWorld* game) {
   }
 }
 
+static bool checkBulletHit(struct GameWorld* game,
+			   const struct Bullet* bullet) {
+  if (bullet->origin == BULLET_FROM_ENEMY) {
+    return checkBulletHitPlayer(game, bullet);
+  } else {
+    return checkBulletHitEnemy(game, bullet);
+  }
+}
+
+static bool checkBulletHitPlayer(struct GameWorld* game,
+				 const struct Bullet* bullet) {
+  if (Entity_HasCollided(&bullet->entity, &game->player.entity)) {
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Bullet hit Player!\n");
+    return false;
+  }
+
+  return false;
+}
+
+static bool checkBulletHitEnemy(struct GameWorld* game,
+				const struct Bullet* bullet) {
+  struct Enemy* e;
+
+  for (e = game->enemyHead.next; e != NULL; e = e->next) {
+    if (Entity_HasCollided(&bullet->entity, &e->entity)) {
+      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Bullet hit Enemy!\n");
+      e->health = 0;
+      return true;
+    }
+  }
+
+  return false;
+}
+
 static void spawnEnemy(struct GameWorld* game) {
   struct Enemy* enemy;
   size_t enemySize = sizeof(struct Enemy);
@@ -193,8 +241,9 @@ static void spawnEnemy(struct GameWorld* game) {
     LOAD_TEXTURE_FOR_ENTITY(game, &enemy->entity, TEXTURE_ENEMY);
     ENTITY_SET_POSITION(&enemy->entity, WINDOW_WIDTH, rand() % WINDOW_HEIGHT);
     ENTITY_SET_VELOCITY(&enemy->entity, -(2 + (rand() % 4)), 0.0f);
-    GAME_WORLD_ADD_ENEMY(game, enemy);
 
+    enemy->health = 1;
+    GAME_WORLD_ADD_ENEMY(game, enemy);
     enemySpawnTimer = 30 + (rand() % 60);
   }
 }
@@ -206,7 +255,7 @@ static void updateEnemies(struct GameWorld* game) {
   for (e = game->enemyHead.next; e != NULL; e = e->next) {
     ENTITY_MOVE(&e->entity);
 
-    if (e->entity.x < 0) {
+    if (IS_ENEMY_OFF_SCREEN(e) || IS_ENEMY_DEAD(e)) {
       if (e == game->enemyTail) {
 	game->enemyTail = prev;
       }
