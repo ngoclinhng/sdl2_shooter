@@ -21,7 +21,7 @@ static int enemySpawnTimer;
 
 #define IS_ENEMY_OFF_SCREEN(E) ((E)->entity.x < -(E)->entity.w)
 #define IS_ENEMY_DEAD(E) ((E)->health == 0)
-#define IS_BULLET_OFF_SCREEN(B) ((B)->entity.x > WINDOW_WIDTH)
+#define IS_BULLET_OFF_SCREEN(B) ((B)->entity.x > SHOOTER_WINDOW_WIDTH)
 
 static void initSDL(void);
 static void initPlayer(struct GameWorld* game);
@@ -130,19 +130,19 @@ static void updatePlayer(struct GameWorld* game) {
   player->reloadTime--;
 
   if (im->gameActions[GAME_ACTION_UP]) {
-    ENTITY_SET_VELOCITY_Y(&player->entity, -PLAYER_SPEED);
+    ENTITY_SET_VELOCITY_Y(&player->entity, -SHOOTER_PLAYER_SPEED);
   }
 
   if (im->gameActions[GAME_ACTION_DOWN]) {
-    ENTITY_SET_VELOCITY_Y(&player->entity, PLAYER_SPEED);
+    ENTITY_SET_VELOCITY_Y(&player->entity, SHOOTER_PLAYER_SPEED);
   }
 
   if (im->gameActions[GAME_ACTION_LEFT]) {
-    ENTITY_SET_VELOCITY_X(&player->entity, -PLAYER_SPEED);
+    ENTITY_SET_VELOCITY_X(&player->entity, -SHOOTER_PLAYER_SPEED);
   }
 
   if (im->gameActions[GAME_ACTION_RIGHT]) {
-    ENTITY_SET_VELOCITY_X(&player->entity, PLAYER_SPEED);
+    ENTITY_SET_VELOCITY_X(&player->entity, SHOOTER_PLAYER_SPEED);
   }
 
   if (im->gameActions[GAME_ACTION_FIRE] && player->reloadTime <= 0) {
@@ -164,7 +164,7 @@ static void fireBullet(struct GameWorld* game) {
 
   LOAD_TEXTURE_FOR_ENTITY(game, &bullet->entity, TEXTURE_PLAYER_BULLET);  
   ENTITY_SET_POSITION_RELATIVE(&bullet->entity, &player->entity);
-  ENTITY_SET_VELOCITY(&bullet->entity, PLAYER_BULLET_SPEED, 0.0f);  
+  ENTITY_SET_VELOCITY(&bullet->entity, SHOOTER_PLAYER_BULLET_SPEED, 0.0f);  
 
   bullet->origin = BULLET_FROM_PLAYER;
   GAME_WORLD_ADD_BULLET(game, bullet);
@@ -239,12 +239,13 @@ static void spawnEnemy(struct GameWorld* game) {
     memset(enemy, 0, enemySize);
 
     LOAD_TEXTURE_FOR_ENTITY(game, &enemy->entity, TEXTURE_ENEMY);
-    ENTITY_SET_POSITION(&enemy->entity, WINDOW_WIDTH, rand() % WINDOW_HEIGHT);
+    ENTITY_SET_POSITION(&enemy->entity, SHOOTER_WINDOW_WIDTH,
+			rand() % SHOOTER_WINDOW_HEIGHT);
     ENTITY_SET_VELOCITY(&enemy->entity, -(2 + (rand() % 4)), 0.0f);
 
     enemy->health = 1;
     GAME_WORLD_ADD_ENEMY(game, enemy);
-    enemySpawnTimer = 30 + (rand() % 60);
+    enemySpawnTimer = 30 + (rand() % SHOOTER_FPS);
   }
 }
 
@@ -337,8 +338,8 @@ void initSDL(void) {
   window = SDL_CreateWindow("Shooter",
 			    SDL_WINDOWPOS_UNDEFINED,
 			    SDL_WINDOWPOS_UNDEFINED,
-			    WINDOW_WIDTH,
-			    WINDOW_HEIGHT,
+			    SHOOTER_WINDOW_WIDTH,
+			    SHOOTER_WINDOW_HEIGHT,
 			    windowFlags);
 
   if (!window) {

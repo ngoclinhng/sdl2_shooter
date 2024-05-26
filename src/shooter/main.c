@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <SDL2/SDL.h>
+
+#include "shooter/defs.h"
 #include "shooter/frame_rate.h"
 #include "shooter/game_world.h"
 
@@ -10,7 +12,7 @@ static void cleanup(void);
 
 int main(void) {
   GameWorld_Init(&g_gameWorld);
-  FrameRate_Init(&g_frameRate, 60);
+  FrameRate_Init(&g_frameRate, SHOOTER_FPS);
   
   atexit(cleanup);
 
