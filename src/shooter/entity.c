@@ -119,10 +119,33 @@ void EntityList_Free(EntityList* list) {
   list->tail = &list->head;
 }
 
-void EntityList_ForEach(EntityList* list, void (*func)(Entity*)) {
+void EntityList_ForEach(EntityList* list, void (*processFunc)(Entity*)) {
   EntityNode* node;
 
   for (node = list->head.next; node != NULL; node = node->next) {
-    func(&node->entity);
+    processFunc(&node->entity);
+  }
+}
+
+void EntityList_ForEachAndPrune(EntityList* list,
+				void (*processFunc)(Entity*),
+				bool (*shouldRemove)(const Entity*)) {
+  EntityNode* prev = &list->head;
+  EntityNode* node = list->head.next;
+
+  while (node != NULL) {
+    if (shouldRemove(&node->entity)) {      
+      if (node == list->tail) {
+	list->tail = prev;
+      }
+
+      prev->next = node->next;
+      free(node);
+      node = prev->next;
+    } else {
+      processFunc(&node->entity);
+      prev = node;
+      node = node->next;
+    }
   }
 }

@@ -8,6 +8,15 @@ static void moveEntity(Entity* e) {
   Entity_Move(e, 1.0f);
 }
 
+static bool alwaysRemove(const Entity* entity) {
+  (void) entity;
+  return true;
+}
+
+static bool isDead(const Entity* entity) {
+  return entity->health == 0;
+}
+
 static void test_Entity_SetRect(void** state) {
   (void) state;
 
@@ -187,6 +196,49 @@ static void test_EntityList_ForEach(void** state) {
   EntityList_Free(&list);
 }
 
+static void test_EntityList_ForEachAndPrune_RemoveSingleton(void** state) {
+  (void) state;
+  
+  EntityList list;
+
+  EntityList_Init(&list);
+  EntityList_Add(&list, ENTITY_ENEMY);
+
+  EntityList_ForEachAndPrune(&list, &moveEntity, &alwaysRemove);
+
+  assert_null(list.head.next);
+  assert_ptr_equal(&list.head, list.tail);
+
+  EntityList_Free(&list);
+}
+
+static void test_EntityList_ForEachAndPrune_RemoveInMiddle(void** state) {
+  (void) state;
+
+  EntityList list;
+  EntityList_Init(&list);
+
+  Entity* e1 = EntityList_Add(&list, ENTITY_ENEMY);
+  e1->health = 1;
+
+  Entity* e2 = EntityList_Add(&list, ENTITY_ENEMY);
+  e2->health = 0;
+
+  Entity* e3 = EntityList_Add(&list, ENTITY_ENEMY);
+  e3->health = 1;
+
+  EntityList_ForEachAndPrune(&list, &moveEntity, &isDead);
+
+  EntityNode* n1 = list.head.next;
+  EntityNode* n2 = n1->next;
+
+  assert_ptr_equal(&n1->entity, e1);
+  assert_ptr_equal(&n2->entity, e3);
+  assert_ptr_equal(n2, list.tail);
+
+  EntityList_Free(&list);
+}
+
 int main(void) {
   const struct CMUnitTest tests[] = {
     cmocka_unit_test(test_Entity_SetRect),
@@ -199,7 +251,9 @@ int main(void) {
     cmocka_unit_test(test_EntityList_Init),
     cmocka_unit_test(test_EntityList_Add),
     cmocka_unit_test(test_EntityList_Free),
-    cmocka_unit_test(test_EntityList_ForEach)
+    cmocka_unit_test(test_EntityList_ForEach),
+    cmocka_unit_test(test_EntityList_ForEachAndPrune_RemoveSingleton),
+    cmocka_unit_test(test_EntityList_ForEachAndPrune_RemoveInMiddle)
   };
 
   return cmocka_run_group_tests(tests, NULL, NULL);

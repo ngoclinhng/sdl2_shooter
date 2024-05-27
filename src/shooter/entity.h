@@ -22,6 +22,7 @@ typedef struct Entity {
   EntityType type;
   SDL_Rect hitbox;
   float dx, dy;
+  int health;
 } Entity;
 
 typedef struct EntityNode {
@@ -59,6 +60,10 @@ void EntityList_Init(EntityList* list);
 Entity* EntityList_Add(EntityList* list, EntityType type);
 void EntityList_Free(EntityList* list);
 
-void EntityList_ForEach(EntityList* list, void (*func)(Entity*));
+void EntityList_ForEach(EntityList* list, void (*processFunc)(Entity*));
+
+void EntityList_ForEachAndPrune(EntityList* list,
+				void (*processFunc)(Entity*),
+				bool (*shouldRemove)(const Entity*));
 
 #endif // SHOOTER_GEOMETRY_H_
