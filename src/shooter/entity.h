@@ -24,6 +24,19 @@ typedef struct Entity {
   float dx, dy;
 } Entity;
 
+typedef struct EntityNode {
+  Entity entity;
+  struct EntityNode* next;
+} EntityNode;
+
+typedef struct EntityList {
+  EntityNode head;
+  EntityNode *tail;
+} EntityList;
+
+
+void Entity_SetRect(Entity* entity, SDL_Rect rect);
+void Entity_SetPositionAndSize(Entity* entity, int x, int y, int w, int h);
 
 void Entity_Place(Entity* entity, int x, int y);
 void Entity_PlaceAtCenter(Entity* entity, const Entity* target);
@@ -41,5 +54,11 @@ bool Entity_IsRightOfLine(const Entity* entity, int x);
 
 bool Entity_IsAboveLine(const Entity* entity, int y);
 bool Entity_IsBelowLine(const Entity* entity, int y);
+
+void EntityList_Init(EntityList* list);
+Entity* EntityList_Add(EntityList* list, EntityType type);
+void EntityList_Free(EntityList* list);
+
+void EntityList_ForEach(EntityList* list, void (*func)(Entity*));
 
 #endif // SHOOTER_GEOMETRY_H_

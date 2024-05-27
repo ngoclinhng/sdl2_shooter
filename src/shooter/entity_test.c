@@ -4,6 +4,37 @@
 #include <cmocka.h>
 #include "entity.h"
 
+static void moveEntity(Entity* e) {
+  Entity_Move(e, 1.0f);
+}
+
+static void test_Entity_SetRect(void** state) {
+  (void) state;
+
+  Entity e;
+  SDL_Rect rect = {10, 20, 30, 40};
+
+  Entity_SetRect(&e, rect);
+
+  assert_int_equal(e.hitbox.x, 10);
+  assert_int_equal(e.hitbox.y, 20);
+  assert_int_equal(e.hitbox.w, 30);
+  assert_int_equal(e.hitbox.h, 40);
+}
+
+static void test_Entity_SetPositionAndSize(void** state) {
+  (void) state;
+
+  Entity e;
+
+  Entity_SetPositionAndSize(&e, 10, 20, 30, 40);
+
+  assert_int_equal(e.hitbox.x, 10);
+  assert_int_equal(e.hitbox.y, 20);
+  assert_int_equal(e.hitbox.w, 30);
+  assert_int_equal(e.hitbox.h, 40);
+}
+
 static void test_Entity_Place(void** state) {
   (void) state;
 
@@ -90,13 +121,85 @@ static void test_Entity_CheckCollision(void** state) {
   assert_false(Entity_CheckCollision(&i, &j));
 }
 
+static void test_EntityList_Init(void** state) {
+  (void) state;
+
+  EntityList list;
+  EntityList_Init(&list);
+
+  EntityNode expectedHead = {.entity = {0}, .next = NULL};
+  assert_memory_equal(&list.head, &expectedHead, sizeof(EntityNode));
+  assert_ptr_equal(list.tail, &list.head);
+}
+
+static void test_EntityList_Add(void** state) {
+  (void) state;
+
+  EntityList list;
+  EntityList_Init(&list);
+
+  Entity* newEntity = EntityList_Add(&list, ENTITY_BULLET);
+
+  assert_non_null(newEntity);
+  assert_ptr_equal(list.tail, list.head.next);
+  assert_ptr_equal(newEntity, &list.tail->entity);
+  assert_int_equal(newEntity->type, ENTITY_BULLET);
+
+  EntityList_Free(&list);
+}
+
+static void test_EntityList_Free(void** state) {
+  (void) state;
+
+  EntityList list;
+  EntityList_Init(&list);
+
+  for (int i = 0; i < 10; ++i) {
+    EntityList_Add(&list, ENTITY_BULLET);
+  }
+
+  EntityList_Free(&list);
+
+  assert_null(list.head.next);
+  assert_ptr_equal(list.tail, &list.head);
+}
+
+static void test_EntityList_ForEach(void** state) {
+  (void) state;
+
+  EntityList list;
+  EntityList_Init(&list);
+
+  Entity *e1 = EntityList_Add(&list, ENTITY_ENEMY);
+  Entity *e2 = EntityList_Add(&list, ENTITY_ENEMY);
+
+  Entity_SetVelocity(e1, 5.0f, 10.0f);
+  Entity_SetVelocity(e2, 50.0f, 100.0f);
+
+  EntityList_ForEach(&list, &moveEntity);
+
+  assert_int_equal(e1->hitbox.x, 5);
+  assert_int_equal(e1->hitbox.y, 10);
+
+  assert_int_equal(e2->hitbox.x, 50);
+  assert_int_equal(e2->hitbox.y, 100);
+
+  EntityList_Free(&list);
+}
+
 int main(void) {
   const struct CMUnitTest tests[] = {
+    cmocka_unit_test(test_Entity_SetRect),
+    cmocka_unit_test(test_Entity_SetPositionAndSize),
     cmocka_unit_test(test_Entity_Place),
     cmocka_unit_test(test_Entity_PlaceAtCenter),
     cmocka_unit_test(test_Entity_SetVelocity),
     cmocka_unit_test(test_Entity_Move),
-    cmocka_unit_test(test_Entity_CheckCollision)
+    cmocka_unit_test(test_Entity_CheckCollision),
+    cmocka_unit_test(test_EntityList_Init),
+    cmocka_unit_test(test_EntityList_Add),
+    cmocka_unit_test(test_EntityList_Free),
+    cmocka_unit_test(test_EntityList_ForEach)
   };
 
   return cmocka_run_group_tests(tests, NULL, NULL);

@@ -1,4 +1,18 @@
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
 #include "shooter/entity.h"
+
+void Entity_SetRect(Entity* entity, SDL_Rect rect) {
+  entity->hitbox = rect;
+}
+
+void Entity_SetPositionAndSize(Entity* entity, int x, int y, int w, int h) {
+  entity->hitbox.x = x;
+  entity->hitbox.y = y;
+  entity->hitbox.w = w;
+  entity->hitbox.h = h;
+}
 
 void Entity_Place(Entity* entity, int x, int y) {
   entity->hitbox.x = x;
@@ -70,4 +84,45 @@ bool Entity_IsAboveLine(const Entity* entity, int y) {
 
 bool Entity_IsBelowLine(const Entity* entity, int y) {
   return entity->hitbox.y >= y;
+}
+
+void EntityList_Init(EntityList* list) {
+  memset(list, 0, sizeof(EntityList));
+  list->tail = &list->head;
+}
+
+Entity* EntityList_Add(EntityList* list, EntityType type) {
+  EntityNode* newNode;
+
+  newNode = malloc(sizeof(EntityNode));
+  assert(newNode != NULL);
+
+  memset(newNode, 0, sizeof(EntityNode));
+  newNode->entity.type = type;
+  
+  list->tail->next = newNode;
+  list->tail = newNode;
+
+  return &newNode->entity;
+}
+
+void EntityList_Free(EntityList* list) {
+  EntityNode* current = list->head.next;
+
+  while (current != NULL) {
+    EntityNode* next = current->next;
+    free(current);
+    current = next;
+  }
+
+  list->head.next = NULL;
+  list->tail = &list->head;
+}
+
+void EntityList_ForEach(EntityList* list, void (*func)(Entity*)) {
+  EntityNode* node;
+
+  for (node = list->head.next; node != NULL; node = node->next) {
+    func(&node->entity);
+  }
 }
