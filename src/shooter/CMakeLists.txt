@@ -16,7 +16,7 @@ set(SHOOTER_SRCS
   frame_rate.c
   input_manager.c
   texture_manager.c
-  entity.c
+  old_entity.c
   game_world.c
   main.c)
 
@@ -37,3 +37,29 @@ add_custom_target(copy_gfx ALL
   COMMENT "Copying gfx directory to build directory")
 
 add_dependencies(shooter copy_gfx)
+
+if (BUILD_TESTING)
+  macro(SHOOTER_TEST TESTNAME)
+    add_executable(${TESTNAME}_test ${TESTNAME}_test.c ${ARGN})
+
+    target_include_directories(${TESTNAME}_test
+      PRIVATE
+      ${SHOOTER_PRIVATE_DEPENDENCIES_INCLUDE_DIRS}
+      ${Shooter_SOURCE_DIR}/src      
+      ${CMOCKA_INCLUDE_DIRS})
+
+    target_link_libraries(${TESTNAME}_test
+      PRIVATE
+      ${SHOOTER_PRIVATE_DEPENDENCIES}
+      ${CMOCKA_LIBRARIES})
+
+    set_target_properties(${TESTNAME}_test
+      PROPERTIES
+      RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests)
+
+    add_test(NAME ${TESTNAME}_test
+      COMMAND ${CMAKE_BINARY_DIR}/tests/${TESTNAME}_test)
+  endmacro()
+
+  shooter_test(entity entity.c)
+endif()

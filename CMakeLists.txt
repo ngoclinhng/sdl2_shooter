@@ -20,4 +20,14 @@ find_package(SDL2_image REQUIRED)
 message(STATUS "SDL2_IMAGE_INCLUDE_DIRS: ${SDL2_IMAGE_INCLUDE_DIRS}")
 message(STATUS "SDL2_IMAGE_LIBRARIES: ${SDL2_IMAGE_LIBRARIES}")
 
+option(BUILD_TESTING "Enable tests." ON)
+
+if (BUILD_TESTING)
+  enable_testing()
+  
+  find_package(CMocka REQUIRED)
+  message(STATUS "CMOCKA_INCLUDE_DIRS: ${CMOCKA_INCLUDE_DIRS}")
+  message(STATUS "CMOCKA_LIBRARIES: ${CMOCKA_LIBRARIES}")
+endif()
+
 add_subdirectory(src/shooter)

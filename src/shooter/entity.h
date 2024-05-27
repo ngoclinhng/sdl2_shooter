@@ -1,69 +1,45 @@
-#ifndef SHOOTER_ENTITY_H_
-#define SHOOTER_ENTITY_H_
+#ifndef SHOOTER_GEOMETRY_H_
+#define SHOOTER_GEOMETRY_H_
 
 #include <stdbool.h>
-#include "shooter/texture_manager.h"
+#include <SDL2/SDL.h>
 
-struct Entity {
-  float x, y;
+typedef enum EntityType {
+  ENTITY_PLAYER,
+  ENTITY_ENEMY,
+  ENTITY_BULLET
+} EntityType;
+
+typedef enum OutOfBoundsFlags {
+  OUT_OF_BOUNDS_NONE = 0,
+  OUT_OF_BOUNDS_LEFT = 1 << 0,
+  OUT_OF_BOUNDS_RIGHT = 1 << 1,
+  OUT_OF_BOUNDS_TOP = 1 << 2,
+  OUT_OF_BOUNDS_BOTTOM = 1 << 3
+} OutOfBoundsFlags;
+
+typedef struct Entity {
+  EntityType type;
+  SDL_Rect hitbox;
   float dx, dy;
-  int w, h;
-  enum TextureType textureType;
-};
+} Entity;
 
-#define ENTITY_LEFT(E) ((E)->x)
-#define ENTITY_RIGHT(E) ((E)->x + (E)->w)
-#define ENTITY_TOP(E) ((E)->y)
-#define ENTITY_BOTTOM(E) ((E)->y + (E)->h)
 
-#define ENTITY_WIDTH(E) ((E)->w)
-#define ENTITY_HEIGHT(E) ((E)->h)
+void Entity_Place(Entity* entity, int x, int y);
+void Entity_PlaceAtCenter(Entity* entity, const Entity* target);
 
-#define ENTITY_SET_POSITION(E, X, Y)		\
-  do {						\
-    (E)->x = (X);				\
-    (E)->y = (Y);				\
-  } while (0)
+void Entity_SetVelocity(Entity* entity, float dx, float dy);
+void Entity_Move(Entity* entity, float dt);
 
-#define ENTITY_SET_HORIZONTAL_POSITION(E, X)	\
-  do {						\
-    (E)->x = (X);				\
-  } while (0)
+bool Entity_CheckCollision(const Entity* entity1, const Entity* entity2);
 
-#define ENTITY_SET_VERTICAL_POSITION(E, Y)	\
-  do {						\
-    (E)->y = (Y);				\
-  } while (0)
+OutOfBoundsFlags
+Entity_CheckOutOfBounds(const Entity* entity, const SDL_Rect* bounds);
 
-#define ENTITY_SET_POSITION_RELATIVE(E1, E2)		\
-  do {							\
-    (E1)->x = (E2)->x + ((E2)->w / 2) - ((E1)->w / 2);	\
-    (E1)->y = (E2)->y + ((E2)->h / 2) - ((E1)->h / 2);	\
-  } while (0)
+bool Entity_IsLeftOfLine(const Entity* entity, int x);
+bool Entity_IsRightOfLine(const Entity* entity, int x);
 
-#define ENTITY_SET_VELOCITY(E, DX, DY)		\
-  do {						\
-    (E)->dx = (DX);				\
-    (E)->dy = (DY);				\
-  } while (0)
+bool Entity_IsAboveLine(const Entity* entity, int y);
+bool Entity_IsBelowLine(const Entity* entity, int y);
 
-#define ENTITY_SET_HORIZONTAL_VELOCITY(E, DX)	\
-  do {						\
-    (E)->dx = (DX);				\
-  } while (0)
-
-#define ENTITY_SET_VERTICAL_VELOCITY(E, DY)	\
-  do {						\
-    (E)->dy = (DY);				\
-  } while (0)
-
-#define ENTITY_MOVE(E)				\
-  do {						\
-    (E)->x += (E)->dx;				\
-    (E)->y += (E)->dy;				\
-  } while (0)
-
-bool Entity_HasCollided(const struct Entity* e1,
-			const struct Entity* e2);
-
-#endif // SHOOTER_ENTITY_H_
+#endif // SHOOTER_GEOMETRY_H_
