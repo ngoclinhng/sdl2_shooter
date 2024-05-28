@@ -13,6 +13,7 @@ if (SDL2_IMAGE_FOUND)
 endif()
 
 set(SHOOTER_SRCS
+  game_context.c
   frame_rate.c
   input_manager.c
   texture_manager.c
@@ -62,4 +63,5 @@ if (BUILD_TESTING)
   endmacro()
 
   shooter_test(entity entity.c)
+  shooter_test(game_context game_context.c)
 endif()

@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <setjmp.h>
 #include <cmocka.h>
-#include "entity.h"
+#include "shooter/entity.h"
 
 static void moveEntity(Entity* e) {
   Entity_Move(e, 1.0f);
