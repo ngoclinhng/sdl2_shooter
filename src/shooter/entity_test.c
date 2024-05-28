@@ -239,6 +239,85 @@ static void test_EntityList_ForEachAndPrune_RemoveInMiddle(void** state) {
   EntityList_Free(&list);
 }
 
+static void test_EntityList_ForEachAndPrune_RemoveLast(void** state) {
+  (void) state;
+
+  EntityList list;
+  EntityList_Init(&list);
+
+  Entity* e1 = EntityList_Add(&list, ENTITY_ENEMY);
+  e1->health = 1;
+
+  Entity* e2 = EntityList_Add(&list, ENTITY_ENEMY);
+  e2->health = 1;
+
+  Entity* e3 = EntityList_Add(&list, ENTITY_ENEMY);
+  e3->health = 0;
+
+  EntityList_ForEachAndPrune(&list, &moveEntity, &isDead);
+
+  EntityNode* n1 = list.head.next;
+  EntityNode* n2 = n1->next;
+
+  assert_ptr_equal(&n1->entity, e1);
+  assert_ptr_equal(&n2->entity, e2);
+  assert_ptr_equal(n2, list.tail);
+
+  EntityList_Free(&list);
+}
+
+static void test_EntityList_ForEachAndPrune_RemoveNone(void** state) {
+  (void) state;
+
+  EntityList list;
+  EntityList_Init(&list);
+
+  Entity* e1 = EntityList_Add(&list, ENTITY_ENEMY);
+  e1->health = 1;
+
+  Entity* e2 = EntityList_Add(&list, ENTITY_ENEMY);
+  e2->health = 1;
+
+  Entity* e3 = EntityList_Add(&list, ENTITY_ENEMY);
+  e3->health = 1;
+
+  EntityList_ForEachAndPrune(&list, &moveEntity, &isDead);
+
+  EntityNode* n1 = list.head.next;
+  EntityNode* n2 = n1->next;
+  EntityNode* n3 = n2->next;
+
+  assert_ptr_equal(&n1->entity, e1);
+  assert_ptr_equal(&n2->entity, e2);
+  assert_ptr_equal(&n3->entity, e3);
+  assert_ptr_equal(n3, list.tail);
+
+  EntityList_Free(&list);
+}
+
+static void test_EntityList_ForEachAndPrune_RemoveAll(void** state) {
+  (void) state;
+
+  EntityList list;
+  EntityList_Init(&list);
+
+  Entity* e1 = EntityList_Add(&list, ENTITY_ENEMY);
+  e1->health = 0;
+
+  Entity* e2 = EntityList_Add(&list, ENTITY_ENEMY);
+  e2->health = 0;
+
+  Entity* e3 = EntityList_Add(&list, ENTITY_ENEMY);
+  e3->health = 0;
+
+  EntityList_ForEachAndPrune(&list, &moveEntity, &isDead);
+
+  assert_null(list.head.next);
+  assert_ptr_equal(list.tail, &list.head);
+
+  EntityList_Free(&list);
+}
+
 int main(void) {
   const struct CMUnitTest tests[] = {
     cmocka_unit_test(test_Entity_SetRect),
@@ -253,7 +332,10 @@ int main(void) {
     cmocka_unit_test(test_EntityList_Free),
     cmocka_unit_test(test_EntityList_ForEach),
     cmocka_unit_test(test_EntityList_ForEachAndPrune_RemoveSingleton),
-    cmocka_unit_test(test_EntityList_ForEachAndPrune_RemoveInMiddle)
+    cmocka_unit_test(test_EntityList_ForEachAndPrune_RemoveInMiddle),
+    cmocka_unit_test(test_EntityList_ForEachAndPrune_RemoveLast),
+    cmocka_unit_test(test_EntityList_ForEachAndPrune_RemoveNone),
+    cmocka_unit_test(test_EntityList_ForEachAndPrune_RemoveAll)
   };
 
   return cmocka_run_group_tests(tests, NULL, NULL);
