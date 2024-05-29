@@ -8,7 +8,8 @@ typedef struct GameContext {
   SDL_Renderer* renderer;
 } GameContext;
 
-GameContext* GameContext_Init(const char* title, int width, int height);
+void GameContext_Init(GameContext* ctx, const char* title, int width,
+		      int height);
 void GameContext_Free(GameContext* ctx);
 
 #endif

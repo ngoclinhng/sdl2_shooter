@@ -1,14 +1,10 @@
-#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <SDL2/SDL_image.h>
 #include "shooter/game_context.h"
 
-GameContext* GameContext_Init(const char* title, int width, int height) {
-  GameContext* ctx;
-
-  ctx = malloc(sizeof(GameContext));
-  assert(ctx != NULL);
+void GameContext_Init(GameContext* ctx, const char* title, int width,
+		      int height) {
   memset(ctx, 0, sizeof(GameContext));
 
   const int windowFlags = 0;
@@ -50,8 +46,6 @@ GameContext* GameContext_Init(const char* title, int width, int height) {
 		 IMG_GetError());
     exit(1);
   }
-
-  return ctx;
 }
 
 void GameContext_Free(GameContext* ctx) {
@@ -63,8 +57,6 @@ void GameContext_Free(GameContext* ctx) {
     if(ctx->window != NULL) {
       SDL_DestroyWindow(ctx->window);
     }
-
-    free(ctx);
   }
 
   IMG_Quit();
