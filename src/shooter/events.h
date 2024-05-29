@@ -13,12 +13,12 @@ typedef enum EventType {
   EVENT_COUNT
 } EventType;
 
-typedef struct Event {
+typedef struct Events {
   bool data[EVENT_COUNT];
-} Event;
+} Events;
 
-void Event_Init(Event* event);
-void Event_PollAndUpdate(Event* event);
-bool Event_IsActive(const Event* event, EventType type);
+void Events_Init(Events* events);
+void Events_PollAndUpdate(Events* events);
+bool Events_IsActive(const Events* events, EventType type);
 
 #endif // SHOOTER_EVENT_HANDLER_H_

@@ -14,7 +14,7 @@ endif()
 
 set(SHOOTER_SRCS
   game_context.c
-  event.c
+  events.c
   frame_rate.c
   input_manager.c
   texture_manager.c
