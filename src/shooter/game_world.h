@@ -8,6 +8,7 @@
 typedef struct GameWorld {
   Entity player;
   EntityList bullets;
+  EntityList enemies;
 } GameWorld;
 
 void GameWorld_Init(GameWorld* game, GameContext* context);

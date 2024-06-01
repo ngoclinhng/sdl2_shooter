@@ -83,6 +83,22 @@ Entity_CheckOutOfBounds(const Entity* entity, const SDL_Rect* bounds) {
   return flags;
 }
 
+bool Entity_IsToTheLeftOf(const Entity* entity, int x) {
+  return RIGHT(&entity->hitbox) <= x;
+}
+
+bool Entity_IsToTheRightOf(const Entity* entity, int x) {
+  return LEFT(&entity->hitbox) >= x;
+}
+
+bool Entity_IsAbove(const Entity* entity, int y) {
+  return BOTTOM(&entity->hitbox) <= y;
+}
+
+bool Entity_IsBelow(const Entity* entity, int y) {
+  return TOP(&entity->hitbox) >= y;
+}
+
 void Entity_Clip(Entity* entity, const SDL_Rect* bounds) {
   SDL_Rect* hitbox = &entity->hitbox;
 
@@ -127,6 +143,7 @@ void EntityList_Free(EntityList* list) {
   EntityNode* current = list->head.next;
 
   while (current != NULL) {
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Free an entity!");
     EntityNode* next = current->next;
     free(current);
     current = next;
@@ -156,6 +173,8 @@ void EntityList_ForEachAndPrune(EntityList* list,
 	list->tail = prev;
       }
 
+      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Free an entity!");
+      
       prev->next = node->next;
       free(node);
       node = prev->next;

@@ -14,16 +14,24 @@ static const SDL_Rect windowBounds = {
 };
 
 static Textures textures;
+static int enemySpawnTimer;
 
 static void resetGameWorld(GameWorld* game);
+
 static void initPlayer(GameWorld* game);
 static void updatePlayer(GameWorld* game, const Events* events);
+
 static void firePlayerBullet(GameWorld* game);
 static void updateBullets(GameWorld* game);
 
+static void spawnEnemy(GameWorld* game);
+static void updateEnemies(GameWorld* game);
+
 static void moveEntity(Entity* entity);
 static void drawEntity(Entity* entity);
+
 static bool isBulletOutOfBounds(const Entity* bullet);
+static bool isEnemyOutOfBounds(const Entity* enemy);
 
 void GameWorld_Init(GameWorld* game, GameContext* context) {
   Textures_Init(&textures, context->renderer);
@@ -33,6 +41,7 @@ void GameWorld_Init(GameWorld* game, GameContext* context) {
 
 void GameWorld_Free(GameWorld* game) {
   EntityList_Free(&game->bullets);
+  EntityList_Free(&game->enemies);
   Textures_Free(&textures);
 }
 
@@ -42,12 +51,15 @@ void GameWorld_Update(GameWorld* game, const Events* events) {
   }
 
   updatePlayer(game, events);
-  updateBullets(game);
+  updateEnemies(game);
+  updateBullets(game);  
+  spawnEnemy(game);
 }
 
 void GameWorld_Draw(GameWorld* game) {
   drawEntity(&game->player);
   EntityList_ForEach(&game->bullets, &drawEntity);
+  EntityList_ForEach(&game->enemies, &drawEntity);
 }
 
 // Helpers
@@ -55,6 +67,9 @@ void GameWorld_Draw(GameWorld* game) {
 static void resetGameWorld(GameWorld* game) {
   initPlayer(game);
   EntityList_Free(&game->bullets);
+  EntityList_Free(&game->enemies);
+
+  enemySpawnTimer = 0;
 }
 
 static void initPlayer(GameWorld* game) {
@@ -118,6 +133,30 @@ static void updateBullets(GameWorld* game) {
 			     &isBulletOutOfBounds);
 }
 
+static void spawnEnemy(GameWorld* game) {
+  if (--enemySpawnTimer <= 0) {
+    Entity* enemy;
+    enemy = EntityList_Add(&game->enemies, ENTITY_ENEMY);
+
+    enemy->textureType = TEXTURE_ENEMY;
+    Textures_Load(&textures, enemy);
+
+    Entity_Place(enemy, windowBounds.w, rand() % windowBounds.h);
+    Entity_SetVelocity(enemy, -(2 + (rand() % 4)), 0.0f);
+
+    enemy->health = 1;
+    enemy->reloadTime = SHOOTER_FPS * (1 + (rand() % 3));
+
+    enemySpawnTimer = 30 + (rand() % SHOOTER_FPS);
+  }
+}
+
+static void updateEnemies(GameWorld* game) {
+  EntityList_ForEachAndPrune(&game->enemies,
+			     &moveEntity,
+			     &isEnemyOutOfBounds);
+}
+
 static void moveEntity(Entity* entity) {
   Entity_Move(entity, 1.0f);
 }
@@ -129,4 +168,8 @@ static void drawEntity(Entity* entity) {
 static bool isBulletOutOfBounds(const Entity* bullet) {
   OutOfBoundsFlags flags = Entity_CheckOutOfBounds(bullet, &windowBounds);
   return flags != OUT_OF_BOUNDS_NONE;
+}
+
+static bool isEnemyOutOfBounds(const Entity* enemy) {
+  return Entity_IsToTheLeftOf(enemy, windowBounds.x);
 }

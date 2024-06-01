@@ -64,6 +64,13 @@ Entity_CheckOutOfBounds(const Entity* entity, const SDL_Rect* bounds);
 
 void Entity_Clip(Entity* entity, const SDL_Rect* bounds);
 
+bool Entity_IsToTheLeftOf(const Entity* entity, int x);
+bool Entity_IsToTheRightOf(const Entity* entity, int x);
+
+bool Entity_IsAbove(const Entity* entity, int y);
+bool Entity_IsBelow(const Entity* entity, int y);
+
+
 void EntityList_Init(EntityList* list);
 Entity* EntityList_Add(EntityList* list, EntityType type);
 void EntityList_Free(EntityList* list);
