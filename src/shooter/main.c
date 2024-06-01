@@ -1,29 +1,33 @@
 #include <stdlib.h>
-#include <SDL2/SDL.h>
-
 #include "shooter/defs.h"
 #include "shooter/frame_rate.h"
-#include "shooter/game_world.h"
+#include "shooter/game_context.h"
+#include "shooter/events.h"
 
-struct FrameRate g_frameRate;
-struct GameWorld g_gameWorld;
+GameContext g_gameContext;
+Events g_events;
+FrameRate g_frameRate;
 
 static void cleanup(void);
 
 int main(void) {
-  GameWorld_Init(&g_gameWorld);
-  FrameRate_Init(&g_frameRate, SHOOTER_FPS);
-  
+  GameContext_Init(&g_gameContext, "Shooter", SHOOTER_WINDOW_WIDTH,
+		   SHOOTER_WINDOW_HEIGHT);
+  Events_Init(&g_events);  
+  FrameRate_Init(&g_frameRate, SHOOTER_FPS);  
   atexit(cleanup);
 
   while (1) {
     FrameRate_BeginFrame(&g_frameRate);    
-    GameWorld_PrepareScene();    
+    GameContext_PrepareScene(&g_gameContext);
 
-    GameWorld_Update(&g_gameWorld);
-    GameWorld_Draw(&g_gameWorld);    
+    Events_PollAndUpdate(&g_events);
 
-    GameWorld_PresentScene();
+    if (Events_IsActive(&g_events, EVENT_QUIT)) {
+      exit(0);
+    }
+
+    GameContext_PresentScene(&g_gameContext);        
     FrameRate_EndFrame(&g_frameRate);
   }
 
@@ -31,5 +35,5 @@ int main(void) {
 }
 
 static void cleanup(void) {
-  GameWorld_Destroy(&g_gameWorld);
+  GameContext_Free(&g_gameContext);
 }
