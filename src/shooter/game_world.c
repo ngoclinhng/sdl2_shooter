@@ -27,6 +27,7 @@ static void initPlayer();
 static void updatePlayer(const Events* events);
 
 static void firePlayerBullet();
+static void updateBullet(Entity* bullet);
 static void updateBullets();
 
 static void spawnEnemy();
@@ -35,8 +36,9 @@ static void updateEnemies();
 static void moveEntity(Entity* entity);
 static void drawEntity(Entity* entity);
 
-static bool isBulletOutOfBounds(const Entity* bullet);
-static bool isEnemyOutOfBounds(const Entity* enemy);
+static bool isBulletOutOfBoundsOrDead(const Entity* bullet);
+static bool isEnemyOutOfBoundsOrDead(const Entity* enemy);
+static void checkCollision(Entity* e1, Entity* e2);
 
 void GameWorld_Init(GameContext* context) {
   Textures_Init(&textures, context->renderer);
@@ -131,11 +133,30 @@ static void firePlayerBullet() {
   Entity_PlaceAtCenter(bullet, &player);
   Entity_SetVelocity(bullet, SHOOTER_PLAYER_BULLET_SPEED, 0.0f);
 
+  bullet->health = 1;
   player.reloadTime = 8;
 }
 
 static void updateBullets() {
-  EntityList_ForEachAndPrune(&bullets, &moveEntity, &isBulletOutOfBounds);
+  EntityList_ForEachAndPrune(&bullets,
+			     &updateBullet,
+			     &isBulletOutOfBoundsOrDead);
+}
+
+static void updateBullet(Entity* bullet) {
+  Entity_Move(bullet, 1.0f);
+  
+  if (bullet->type == ENTITY_ENEMY_BULLET &&
+      Entity_CheckCollision(bullet, &player)) {
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Bullet hit Player!");
+    player.health = 0;
+    bullet->health = 0;
+    return;
+  }
+
+  if (bullet->type == ENTITY_PLAYER_BULLET) {       
+    EntityList_ForEachWith(&enemies, bullet, &checkCollision);
+  }
 }
 
 static void spawnEnemy() {
@@ -157,7 +178,9 @@ static void spawnEnemy() {
 }
 
 static void updateEnemies() {
-  EntityList_ForEachAndPrune(&enemies, &moveEntity, &isEnemyOutOfBounds);
+  EntityList_ForEachAndPrune(&enemies,
+			     &moveEntity,
+			     &isEnemyOutOfBoundsOrDead);
 }
 
 static void moveEntity(Entity* entity) {
@@ -168,11 +191,27 @@ static void drawEntity(Entity* entity) {
   Textures_Render(&textures, entity);
 }
 
-static bool isBulletOutOfBounds(const Entity* bullet) {
+static bool isBulletOutOfBoundsOrDead(const Entity* bullet) {
+  if (bullet->health == 0) {
+    return true;
+  }
+  
   OutOfBoundsFlags flags = Entity_CheckOutOfBounds(bullet, &windowBounds);
   return flags != OUT_OF_BOUNDS_NONE;
 }
 
-static bool isEnemyOutOfBounds(const Entity* enemy) {
+static bool isEnemyOutOfBoundsOrDead(const Entity* enemy) {
+  if (enemy->health == 0) {
+    return true;
+  }
+  
   return Entity_IsToTheLeftOf(enemy, windowBounds.x);
+}
+
+static void checkCollision(Entity* e1, Entity* e2) {
+  if (Entity_CheckCollision(e1, e2)) {
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Collision detected!");
+    e1->health = 0;
+    e2->health = 0;
+  }
 }

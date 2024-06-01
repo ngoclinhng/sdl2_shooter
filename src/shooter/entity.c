@@ -161,6 +161,15 @@ void EntityList_ForEach(EntityList* list, void (*processFunc)(Entity*)) {
   }
 }
 
+void EntityList_ForEachWith(EntityList* list, Entity* other,
+			    void (*processFunc)(Entity*, Entity*)) {
+  EntityNode* node;
+
+  for (node = list->head.next; node != NULL; node = node->next) {
+    processFunc(&node->entity, other);
+  }
+}
+
 void EntityList_ForEachAndPrune(EntityList* list,
 				void (*processFunc)(Entity*),
 				bool (*shouldRemove)(const Entity*)) {

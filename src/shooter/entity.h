@@ -7,7 +7,8 @@
 typedef enum EntityType {
   ENTITY_PLAYER,
   ENTITY_ENEMY,
-  ENTITY_PLAYER_BULLET
+  ENTITY_PLAYER_BULLET,
+  ENTITY_ENEMY_BULLET
 } EntityType;
 
 typedef enum TextureType {
@@ -76,6 +77,9 @@ Entity* EntityList_Add(EntityList* list, EntityType type);
 void EntityList_Free(EntityList* list);
 
 void EntityList_ForEach(EntityList* list, void (*processFunc)(Entity*));
+
+void EntityList_ForEachWith(EntityList* list, Entity* other,
+			    void (*processFunc)(Entity*, Entity*));
 
 void EntityList_ForEachAndPrune(EntityList* list,
 				void (*processFunc)(Entity*),
