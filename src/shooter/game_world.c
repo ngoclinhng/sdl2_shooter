@@ -103,11 +103,11 @@ static void firePlayerBullet(GameWorld* game) {
   Entity* bullet;
   bullet = EntityList_Add(&game->bullets, ENTITY_PLAYER_BULLET);
 
-  Entity_PlaceAtCenter(bullet, &game->player);
-  Entity_SetVelocity(bullet, SHOOTER_PLAYER_BULLET_SPEED, 0.0f);
-
   bullet->textureType = TEXTURE_PLAYER_BULLET;
   Textures_Load(&textures, bullet);
+  
+  Entity_PlaceAtCenter(bullet, &game->player);
+  Entity_SetVelocity(bullet, SHOOTER_PLAYER_BULLET_SPEED, 0.0f);
 
   game->player.reloadTime = 8;
 }
