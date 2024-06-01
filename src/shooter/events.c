@@ -2,8 +2,7 @@
 #include <SDL2/SDL.h>
 #include "shooter/events.h"
 
-static void updateEventsData(Events* events, SDL_Keycode key,
-			     bool isPressed);
+static void updateEventsData(Events* events, SDL_Keycode key, bool isPressed);
 
 void Events_Init(Events* events) {
   memset(events, 0, sizeof(Events));
@@ -32,8 +31,7 @@ bool Events_IsActive(const Events* events, EventType type) {
 }
 
 
-static void updateEventsData(Events* events, SDL_Keycode key,
-			     bool isPressed) {
+static void updateEventsData(Events* events, SDL_Keycode key, bool isPressed) {
   switch (key) {
   case SDLK_UP:
     events->data[EVENT_UP] = isPressed;

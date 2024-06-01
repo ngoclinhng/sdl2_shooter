@@ -1,5 +1,5 @@
-#ifndef SHOOTER_EVENT_HANDLER_H_
-#define SHOOTER_EVENT_HANDLER_H_
+#ifndef SHOOTER_EVENTS_H_
+#define SHOOTER_EVENTS_H_
 
 #include <stdbool.h>
 
@@ -21,4 +21,4 @@ void Events_Init(Events* events);
 void Events_PollAndUpdate(Events* events);
 bool Events_IsActive(const Events* events, EventType type);
 
-#endif // SHOOTER_EVENT_HANDLER_H_
+#endif // SHOOTER_EVENTS_H_

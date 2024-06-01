@@ -48,6 +48,15 @@ void GameContext_Init(GameContext* ctx, const char* title, int width,
   }
 }
 
+void GameContext_PrepareScene(GameContext* ctx) {
+  SDL_SetRenderDrawColor(ctx->renderer, 32, 32, 32, 255);
+  SDL_RenderClear(ctx->renderer);
+}
+
+void GameContext_PresentScene(GameContext* ctx) {
+    SDL_RenderPresent(ctx->renderer);
+}
+
 void GameContext_Free(GameContext* ctx) {
   if (ctx != NULL) {
     if (ctx->renderer != NULL) {
