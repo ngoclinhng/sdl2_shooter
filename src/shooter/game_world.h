@@ -5,16 +5,10 @@
 #include "shooter/events.h"
 #include "shooter/entity.h"
 
-typedef struct GameWorld {
-  Entity player;
-  EntityList bullets;
-  EntityList enemies;
-} GameWorld;
+void GameWorld_Init(GameContext* context);
+void GameWorld_Free();
 
-void GameWorld_Init(GameWorld* game, GameContext* context);
-void GameWorld_Free(GameWorld* game);
-
-void GameWorld_Update(GameWorld* game, const Events* events);
-void GameWorld_Draw(GameWorld* game);
+void GameWorld_Update(const Events* events);
+void GameWorld_Draw();
 
 #endif // SHOOTER_GAME_WORLD_H_

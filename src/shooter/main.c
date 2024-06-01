@@ -6,8 +6,6 @@
 #include "shooter/frame_rate.h"
 
 GameContext g_gameContext;
-GameWorld g_gameWorld;
-
 Events g_events;
 FrameRate g_frameRate;
 
@@ -16,7 +14,7 @@ static void cleanup(void);
 int main(void) {
   GameContext_Init(&g_gameContext, "Shooter", SHOOTER_WINDOW_WIDTH,
 		   SHOOTER_WINDOW_HEIGHT);
-  GameWorld_Init(&g_gameWorld, &g_gameContext);
+  GameWorld_Init(&g_gameContext);
   Events_Init(&g_events);
   FrameRate_Init(&g_frameRate, SHOOTER_FPS);  
   atexit(cleanup);
@@ -26,8 +24,8 @@ int main(void) {
     GameContext_PrepareScene(&g_gameContext);
 
     Events_PollAndUpdate(&g_events);
-    GameWorld_Update(&g_gameWorld, &g_events);
-    GameWorld_Draw(&g_gameWorld);
+    GameWorld_Update(&g_events);
+    GameWorld_Draw();
 
     GameContext_PresentScene(&g_gameContext);        
     FrameRate_EndFrame(&g_frameRate);
@@ -37,6 +35,6 @@ int main(void) {
 }
 
 static void cleanup(void) {
-  GameWorld_Free(&g_gameWorld);
+  GameWorld_Free();
   GameContext_Free(&g_gameContext);
 }

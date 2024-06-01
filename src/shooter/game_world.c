@@ -14,18 +14,23 @@ static const SDL_Rect windowBounds = {
 };
 
 static Textures textures;
+
+static Entity player;
+static EntityList bullets;
+static EntityList enemies;
+
 static int enemySpawnTimer;
 
-static void resetGameWorld(GameWorld* game);
+static void resetGameWorld();
 
-static void initPlayer(GameWorld* game);
-static void updatePlayer(GameWorld* game, const Events* events);
+static void initPlayer();
+static void updatePlayer(const Events* events);
 
-static void firePlayerBullet(GameWorld* game);
-static void updateBullets(GameWorld* game);
+static void firePlayerBullet();
+static void updateBullets();
 
-static void spawnEnemy(GameWorld* game);
-static void updateEnemies(GameWorld* game);
+static void spawnEnemy();
+static void updateEnemies();
 
 static void moveEntity(Entity* entity);
 static void drawEntity(Entity* entity);
@@ -33,110 +38,110 @@ static void drawEntity(Entity* entity);
 static bool isBulletOutOfBounds(const Entity* bullet);
 static bool isEnemyOutOfBounds(const Entity* enemy);
 
-void GameWorld_Init(GameWorld* game, GameContext* context) {
+void GameWorld_Init(GameContext* context) {
   Textures_Init(&textures, context->renderer);
-  memset(game, 0, sizeof(GameWorld));
-  resetGameWorld(game);
+
+  EntityList_Init(&bullets);
+  EntityList_Init(&enemies);
+  
+  resetGameWorld();
 }
 
-void GameWorld_Free(GameWorld* game) {
-  EntityList_Free(&game->bullets);
-  EntityList_Free(&game->enemies);
+void GameWorld_Free() {
+  EntityList_Free(&bullets);
+  EntityList_Free(&enemies);
   Textures_Free(&textures);
 }
 
-void GameWorld_Update(GameWorld* game, const Events* events) {
+void GameWorld_Update(const Events* events) {
   if (Events_IsActive(events, EVENT_QUIT)) {
     exit(0);
   }
 
-  updatePlayer(game, events);
-  updateEnemies(game);
-  updateBullets(game);  
-  spawnEnemy(game);
+  updatePlayer(events);
+  updateEnemies();
+  updateBullets();  
+  spawnEnemy();
 }
 
-void GameWorld_Draw(GameWorld* game) {
-  drawEntity(&game->player);
-  EntityList_ForEach(&game->bullets, &drawEntity);
-  EntityList_ForEach(&game->enemies, &drawEntity);
+void GameWorld_Draw() {
+  drawEntity(&player);
+  EntityList_ForEach(&bullets, &drawEntity);
+  EntityList_ForEach(&enemies, &drawEntity);
 }
 
 // Helpers
 
-static void resetGameWorld(GameWorld* game) {
-  initPlayer(game);
-  EntityList_Free(&game->bullets);
-  EntityList_Free(&game->enemies);
+static void resetGameWorld() {  
+  initPlayer();
+
+  EntityList_Free(&bullets);
+  EntityList_Free(&enemies);
 
   enemySpawnTimer = 0;
 }
 
-static void initPlayer(GameWorld* game) {
-  Entity* entity = &game->player;
+static void initPlayer() {
+  memset(&player, 0, sizeof(Entity));
 
-  entity->type = ENTITY_PLAYER;
-  entity->textureType = TEXTURE_PLAYER;
-  entity->health = 1;
-  entity->reloadTime = 0;
+  player.type = ENTITY_PLAYER;
+  player.textureType = TEXTURE_PLAYER;
+  player.health = 1;
+  player.reloadTime = 0;
 
-  Textures_Load(&textures, entity);
-  Entity_Place(entity, 100, 100);  
+  Textures_Load(&textures, &player);
+  Entity_Place(&player, 100, 100);  
 }
 
-static void updatePlayer(GameWorld* game, const Events* events) {
-  Entity* entity = &game->player;
-
-  entity->reloadTime--;
-  Entity_SetVelocity(entity, 0.0f, 0.0f);
+static void updatePlayer(const Events* events) {
+  player.reloadTime--;
+  Entity_SetVelocity(&player, 0.0f, 0.0f);
 
   if (Events_IsActive(events, EVENT_UP)) {
-    Entity_SetVelocityY(entity, -SHOOTER_PLAYER_SPEED);
+    Entity_SetVelocityY(&player, -SHOOTER_PLAYER_SPEED);
   }
 
   if (Events_IsActive(events, EVENT_DOWN)) {
-    Entity_SetVelocityY(entity, SHOOTER_PLAYER_SPEED);
+    Entity_SetVelocityY(&player, SHOOTER_PLAYER_SPEED);
   }
 
   if (Events_IsActive(events, EVENT_LEFT)) {
-    Entity_SetVelocityX(entity, -SHOOTER_PLAYER_SPEED);
+    Entity_SetVelocityX(&player, -SHOOTER_PLAYER_SPEED);
   }
 
   if (Events_IsActive(events, EVENT_RIGHT)) {
-    Entity_SetVelocityX(entity, SHOOTER_PLAYER_SPEED);
+    Entity_SetVelocityX(&player, SHOOTER_PLAYER_SPEED);
   }
 
-  if (Events_IsActive(events, EVENT_FIRE) && entity->reloadTime <= 0) {
-    firePlayerBullet(game);
+  if (Events_IsActive(events, EVENT_FIRE) && player.reloadTime <= 0) {
+    firePlayerBullet();
   }
 
-  moveEntity(entity);
-  Entity_Clip(entity, &playerClipRect);
+  moveEntity(&player);
+  Entity_Clip(&player, &playerClipRect);
 }
 
-static void firePlayerBullet(GameWorld* game) {
+static void firePlayerBullet() {
   Entity* bullet;
-  bullet = EntityList_Add(&game->bullets, ENTITY_PLAYER_BULLET);
+  bullet = EntityList_Add(&bullets, ENTITY_PLAYER_BULLET);
 
   bullet->textureType = TEXTURE_PLAYER_BULLET;
   Textures_Load(&textures, bullet);
   
-  Entity_PlaceAtCenter(bullet, &game->player);
+  Entity_PlaceAtCenter(bullet, &player);
   Entity_SetVelocity(bullet, SHOOTER_PLAYER_BULLET_SPEED, 0.0f);
 
-  game->player.reloadTime = 8;
+  player.reloadTime = 8;
 }
 
-static void updateBullets(GameWorld* game) {
-  EntityList_ForEachAndPrune(&game->bullets,
-			     &moveEntity,
-			     &isBulletOutOfBounds);
+static void updateBullets() {
+  EntityList_ForEachAndPrune(&bullets, &moveEntity, &isBulletOutOfBounds);
 }
 
-static void spawnEnemy(GameWorld* game) {
+static void spawnEnemy() {
   if (--enemySpawnTimer <= 0) {
     Entity* enemy;
-    enemy = EntityList_Add(&game->enemies, ENTITY_ENEMY);
+    enemy = EntityList_Add(&enemies, ENTITY_ENEMY);
 
     enemy->textureType = TEXTURE_ENEMY;
     Textures_Load(&textures, enemy);
@@ -151,10 +156,8 @@ static void spawnEnemy(GameWorld* game) {
   }
 }
 
-static void updateEnemies(GameWorld* game) {
-  EntityList_ForEachAndPrune(&game->enemies,
-			     &moveEntity,
-			     &isEnemyOutOfBounds);
+static void updateEnemies() {
+  EntityList_ForEachAndPrune(&enemies, &moveEntity, &isEnemyOutOfBounds);
 }
 
 static void moveEntity(Entity* entity) {
