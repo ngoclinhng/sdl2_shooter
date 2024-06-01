@@ -7,7 +7,7 @@
 typedef enum EntityType {
   ENTITY_PLAYER,
   ENTITY_ENEMY,
-  ENTITY_BULLET
+  ENTITY_PLAYER_BULLET
 } EntityType;
 
 typedef enum TextureType {
@@ -32,6 +32,7 @@ typedef struct Entity {
   SDL_Rect hitbox;
   float dx, dy;
   int health;
+  int reloadTime;
 } Entity;
 
 typedef struct EntityNode {

@@ -147,12 +147,12 @@ static void test_EntityList_Add(void** state) {
   EntityList list;
   EntityList_Init(&list);
 
-  Entity* newEntity = EntityList_Add(&list, ENTITY_BULLET);
+  Entity* newEntity = EntityList_Add(&list, ENTITY_PLAYER_BULLET);
 
   assert_non_null(newEntity);
   assert_ptr_equal(list.tail, list.head.next);
   assert_ptr_equal(newEntity, &list.tail->entity);
-  assert_int_equal(newEntity->type, ENTITY_BULLET);
+  assert_int_equal(newEntity->type, ENTITY_PLAYER_BULLET);
 
   EntityList_Free(&list);
 }
@@ -164,7 +164,7 @@ static void test_EntityList_Free(void** state) {
   EntityList_Init(&list);
 
   for (int i = 0; i < 10; ++i) {
-    EntityList_Add(&list, ENTITY_BULLET);
+    EntityList_Add(&list, ENTITY_PLAYER_BULLET);
   }
 
   EntityList_Free(&list);
