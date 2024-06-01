@@ -32,6 +32,14 @@ void Entity_SetVelocity(Entity* entity, float dx, float dy) {
   entity->dy = dy;
 }
 
+void Entity_SetVelocityX(Entity* entity, float dx) {
+  entity->dx = dx;
+}
+
+void Entity_SetVelocityY(Entity* entity, float dy) {
+  entity->dy = dy;
+}
+
 void Entity_Move(Entity* entity, float dt) {
   entity->hitbox.x += (int)(entity->dx * dt);
   entity->hitbox.y += (int)(entity->dy * dt);

@@ -43,6 +43,8 @@ void Entity_Place(Entity* entity, int x, int y);
 void Entity_PlaceAtCenter(Entity* entity, const Entity* target);
 
 void Entity_SetVelocity(Entity* entity, float dx, float dy);
+void Entity_SetVelocityX(Entity* entity, float dx);
+void Entity_SetVelocityY(Entity* entity, float dy);
 void Entity_Move(Entity* entity, float dt);
 
 bool Entity_CheckCollision(const Entity* entity1, const Entity* entity2);

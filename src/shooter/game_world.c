@@ -7,6 +7,7 @@ static Textures textures;
 
 static void resetGameWorld(GameWorld* game);
 static void initPlayer(GameWorld* game);
+static void updatePlayer(GameWorld* game, const Events* events);
 static void drawPlayer(GameWorld* game);
 
 void GameWorld_Init(GameWorld* game, GameContext* context) {
@@ -23,7 +24,7 @@ void GameWorld_Update(GameWorld* game, const Events* events) {
     exit(0);
   }
 
-  // TODO: update game world
+  updatePlayer(game, events);
 }
 
 void GameWorld_Draw(GameWorld* game) {
@@ -48,6 +49,30 @@ static void initPlayer(GameWorld* game) {
   player->health = 1;
 
   Entity_SetVelocity(player, SHOOTER_PLAYER_SPEED, 0.0f);
+}
+
+static void updatePlayer(GameWorld* game, const Events* events) {
+  Entity* entity = &game->player;
+
+  Entity_SetVelocity(entity, 0.0f, 0.0f);
+
+  if (Events_IsActive(events, EVENT_UP)) {
+    Entity_SetVelocityY(entity, -SHOOTER_PLAYER_SPEED);
+  }
+
+  if (Events_IsActive(events, EVENT_DOWN)) {
+    Entity_SetVelocityY(entity, SHOOTER_PLAYER_SPEED);
+  }
+
+  if (Events_IsActive(events, EVENT_LEFT)) {
+    Entity_SetVelocityX(entity, -SHOOTER_PLAYER_SPEED);
+  }
+
+  if (Events_IsActive(events, EVENT_RIGHT)) {
+    Entity_SetVelocityX(entity, SHOOTER_PLAYER_SPEED);
+  }
+
+  Entity_Move(entity, 1.0f);
 }
 
 static void drawPlayer(GameWorld* game) {
