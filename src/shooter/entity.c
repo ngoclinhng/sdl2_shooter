@@ -3,6 +3,13 @@
 #include <assert.h>
 #include "shooter/entity.h"
 
+#define TOP(R) ((R)->y)
+#define RIGHT(R) ((R)->x + (R)->w)
+#define BOTTOM(R) ((R)->y + (R)->h)
+#define LEFT(R) ((R)->x)
+#define CENTER_X(R) ((R)->x + (R)->w / 2)
+#define CENTER_Y(R) ((R)->y + (R)->h / 2)
+
 void Entity_SetRect(Entity* entity, SDL_Rect rect) {
   entity->hitbox = rect;
 }
@@ -20,11 +27,8 @@ void Entity_Place(Entity* entity, int x, int y) {
 }
 
 void Entity_PlaceAtCenter(Entity* entity, const Entity* target) {
-  int centerX = target->hitbox.x + target->hitbox.w / 2;
-  int centerY = target->hitbox.y + target->hitbox.h / 2;
-
-  entity->hitbox.x = centerX - entity->hitbox.w / 2;
-  entity->hitbox.y = centerY - entity->hitbox.h / 2;
+  entity->hitbox.x = CENTER_X(&target->hitbox) - entity->hitbox.w / 2;
+  entity->hitbox.y = CENTER_Y(&target->hitbox) - entity->hitbox.h / 2;
 }
 
 void Entity_SetVelocity(Entity* entity, float dx, float dy) {
@@ -58,40 +62,45 @@ bool Entity_CheckCollision(const Entity* a, const Entity* b) {
 OutOfBoundsFlags
 Entity_CheckOutOfBounds(const Entity* entity, const SDL_Rect* bounds) {
   OutOfBoundsFlags flags = OUT_OF_BOUNDS_NONE;
+  const SDL_Rect* hitbox = &entity->hitbox;
 
-  if (entity->hitbox.x + entity->hitbox.w <= bounds->x) {
+  if (RIGHT(hitbox) <= LEFT(bounds)) {
     flags |= OUT_OF_BOUNDS_LEFT;
   }
 
-  if (entity->hitbox.x >= bounds->x + bounds->w) {
+  if (LEFT(hitbox) >= RIGHT(bounds)) {
     flags |= OUT_OF_BOUNDS_RIGHT;
   }
 
-  if (entity->hitbox.y + entity->hitbox.h <= bounds->y) {
+  if (BOTTOM(hitbox) <= TOP(bounds)) {
     flags |= OUT_OF_BOUNDS_TOP;
   }
 
-  if (entity->hitbox.y >= bounds->y + bounds->h) {
+  if (TOP(hitbox) >= BOTTOM(bounds)) {
     flags |= OUT_OF_BOUNDS_BOTTOM;
   }
 
   return flags;
 }
 
-bool Entity_IsLeftOfLine(const Entity* entity, int x) {
-  return entity->hitbox.x + entity->hitbox.w <= x;
-}
+void Entity_Clip(Entity* entity, const SDL_Rect* bounds) {
+  SDL_Rect* hitbox = &entity->hitbox;
 
-bool Entity_IsRightOfLine(const Entity* entity, int x) {
-  return entity->hitbox.x >= x;
-}
+  if (TOP(hitbox) < TOP(bounds)) {
+    hitbox->y = TOP(bounds);
+  }
 
-bool Entity_IsAboveLine(const Entity* entity, int y) {
-  return entity->hitbox.y + entity->hitbox.h <= y;
-}
+  if (BOTTOM(hitbox) > BOTTOM(bounds)) {
+    hitbox->y = BOTTOM(bounds) - hitbox->h;
+  }
 
-bool Entity_IsBelowLine(const Entity* entity, int y) {
-  return entity->hitbox.y >= y;
+  if (LEFT(hitbox) < LEFT(bounds)) {
+    hitbox->x = LEFT(bounds);
+  }
+
+  if (RIGHT(hitbox) > RIGHT(bounds)) {
+    hitbox->x = RIGHT(bounds) - hitbox->w;
+  }
 }
 
 void EntityList_Init(EntityList* list) {

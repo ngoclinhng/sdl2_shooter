@@ -16,25 +16,28 @@ void Textures_Init(Textures* self, SDL_Renderer* renderer) {
   self->renderer = renderer;
 }
 
-void Textures_Load(Textures* self, TextureType type, int* w, int* h) {
+void Textures_Load(Textures* self, Entity* entity) {
+  TextureType type = entity->textureType;  
   SDL_Texture* texture = loadTexture(self, type);
 
   if (!texture)  {
     return;
   }
 
+  int* w = &entity->hitbox.w;
+  int* h = &entity->hitbox.h;
   SDL_QueryTexture(texture, NULL, NULL, w, h);
 }
 
-void Textures_Render(Textures* self, TextureType type, float x, float y) {
+void Textures_Render(Textures* self, Entity* entity) {
+  TextureType type = entity->textureType;
   SDL_Texture* texture = loadTexture(self, type);
 
   if (!texture) {
     return;
   }
   
-  SDL_Rect destRect = {x, y, 0, 0};
-  SDL_QueryTexture(texture, NULL, NULL, &destRect.w, &destRect.h);
+  SDL_Rect destRect = entity->hitbox;
   SDL_RenderCopy(self->renderer, texture, NULL, &destRect);
 }
 

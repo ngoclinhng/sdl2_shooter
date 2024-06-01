@@ -3,6 +3,11 @@
 #include "shooter/textures.h"
 #include "shooter/game_world.h"
 
+static const SDL_Rect playerClipRect = {
+  0, 0,
+  SHOOTER_WINDOW_WIDTH / 2, SHOOTER_WINDOW_HEIGHT
+};
+
 static Textures textures;
 
 static void resetGameWorld(GameWorld* game);
@@ -11,7 +16,7 @@ static void updatePlayer(GameWorld* game, const Events* events);
 static void drawPlayer(GameWorld* game);
 
 void GameWorld_Init(GameWorld* game, GameContext* context) {
-  Textures_Init(&textures, context->renderer); 
+  Textures_Init(&textures, context->renderer);
   resetGameWorld(game);
 }
 
@@ -39,16 +44,14 @@ static void resetGameWorld(GameWorld* game) {
 }
 
 static void initPlayer(GameWorld* game) {
-  Entity* player = &game->player;
-  int width, height;  
+  Entity* entity = &game->player;
 
-  Textures_Load(&textures, TEXTURE_PLAYER, &width, &height);
-  Entity_SetPositionAndSize(player, 100, 100, width, height);
-  
-  player->type = ENTITY_PLAYER;
-  player->health = 1;
+  entity->type = ENTITY_PLAYER;
+  entity->textureType = TEXTURE_PLAYER;
+  entity->health = 1;
 
-  Entity_SetVelocity(player, SHOOTER_PLAYER_SPEED, 0.0f);
+  Textures_Load(&textures, entity);
+  Entity_Place(entity, 100, 100);  
 }
 
 static void updatePlayer(GameWorld* game, const Events* events) {
@@ -73,10 +76,9 @@ static void updatePlayer(GameWorld* game, const Events* events) {
   }
 
   Entity_Move(entity, 1.0f);
+  Entity_Clip(entity, &playerClipRect);
 }
 
 static void drawPlayer(GameWorld* game) {
-  int x = game->player.hitbox.x;
-  int y = game->player.hitbox.y;  
-  Textures_Render(&textures, TEXTURE_PLAYER, x, y);
+  Textures_Render(&textures, &game->player);
 }

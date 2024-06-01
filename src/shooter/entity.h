@@ -10,6 +10,14 @@ typedef enum EntityType {
   ENTITY_BULLET
 } EntityType;
 
+typedef enum TextureType {
+  TEXTURE_PLAYER,
+  TEXTURE_PLAYER_BULLET,
+  TEXTURE_ENEMY,
+  TEXTURE_ENEMY_BULLET,
+  TEXTURE_COUNT
+} TextureType;
+
 typedef enum OutOfBoundsFlags {
   OUT_OF_BOUNDS_NONE = 0,
   OUT_OF_BOUNDS_LEFT = 1 << 0,
@@ -20,6 +28,7 @@ typedef enum OutOfBoundsFlags {
 
 typedef struct Entity {
   EntityType type;
+  TextureType textureType;
   SDL_Rect hitbox;
   float dx, dy;
   int health;
@@ -52,11 +61,7 @@ bool Entity_CheckCollision(const Entity* entity1, const Entity* entity2);
 OutOfBoundsFlags
 Entity_CheckOutOfBounds(const Entity* entity, const SDL_Rect* bounds);
 
-bool Entity_IsLeftOfLine(const Entity* entity, int x);
-bool Entity_IsRightOfLine(const Entity* entity, int x);
-
-bool Entity_IsAboveLine(const Entity* entity, int y);
-bool Entity_IsBelowLine(const Entity* entity, int y);
+void Entity_Clip(Entity* entity, const SDL_Rect* bounds);
 
 void EntityList_Init(EntityList* list);
 Entity* EntityList_Add(EntityList* list, EntityType type);
