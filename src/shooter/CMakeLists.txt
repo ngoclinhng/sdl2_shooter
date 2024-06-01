@@ -16,11 +16,9 @@ set(SHOOTER_SRCS
   game_context.c
   events.c
   textures.c
-  frame_rate.c
-  input_manager.c
-  texture_manager.c
-  old_entity.c
+  entity.c
   game_world.c
+  frame_rate.c
   main.c)
 
 add_executable(shooter ${SHOOTER_SRCS})

@@ -1,441 +1,57 @@
-#include <stdlib.h>
 #include <string.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-
 #include "shooter/defs.h"
+#include "shooter/textures.h"
 #include "shooter/game_world.h"
 
-static SDL_Window* window;
-static SDL_Renderer* renderer;
-static int enemySpawnTimer;
-static int gameWorldResetTimer;
+static Textures textures;
 
-#define LOAD_TEXTURE_FOR_ENTITY(game, entity, type)	\
-  do {							\
-    TextureManager_Load(&((game)->textureManager),	\
-		        (type),				\
-			&((entity)->w),			\
-			&(entity)->h);			\
-    (entity)->textureType = (type);			\
-  } while (0)
+static void resetGameWorld(GameWorld* game);
+static void initPlayer(GameWorld* game);
+static void drawPlayer(GameWorld* game);
 
-#define IS_ENEMY_OFF_SCREEN(E) ((E)->entity.x < -(E)->entity.w)
-#define IS_DEAD(E) ((E)->health == 0)
-
-#define IS_BULLET_OFF_SCREEN(B)			\
-  ((B)->entity.x < -(B)->entity.w ||		\
-   (B)->entity.x > SHOOTER_WINDOW_WIDTH ||	\
-   (B)->entity.y < -(B)->entity.h ||		\
-   (B)->entity.y > SHOOTER_WINDOW_HEIGHT)
-
-static void initSDL(void);
-static void initPlayer(struct GameWorld* game);
-static void GameWorld_Reset(struct GameWorld* game);
-
-static void updatePlayer(struct GameWorld* game);
-static void updateBullets(struct GameWorld* game);
-
-static struct Bullet* newBullet(struct GameWorld* game,
-				enum TextureType textureType);
-
-static void firePlayerBullet(struct GameWorld* game);
-static void fireEnemyBullet(struct GameWorld* game, struct Enemy* enemy);
-
-static void spawnEnemy(struct GameWorld* game);
-static void updateEnemies(struct GameWorld* game);
-static void ensureEntityStaysInLeftHalfOfScreen(struct Entity *entity);
-
-static bool checkBulletHit(struct GameWorld* game,
-			   const struct Bullet* bullet);
-
-static bool checkBulletHitPlayer(struct GameWorld* game,
-				 const struct Bullet* bullet);
-
-static bool checkBulletHitEnemy(struct GameWorld* game,
-				const struct Bullet* bullet);
-
-static void drawPlayer(struct GameWorld* game);
-static void drawBullets(struct GameWorld* game);
-static void drawEnemies(struct GameWorld* game);
-
-static void destroyBullets(struct GameWorld* game);
-static void destroyEnemies(struct GameWorld* game);
-
-void GameWorld_Init(struct GameWorld* game) {
-  initSDL();
-
-  memset(game, 0, sizeof(struct GameWorld));
-  InputManager_Init(&game->inputManager);
-  TextureManager_Init(&game->textureManager, renderer);
-
-  GameWorld_Reset(game);
+void GameWorld_Init(GameWorld* game, GameContext* context) {
+  Textures_Init(&textures, context->renderer); 
+  resetGameWorld(game);
 }
 
-void GameWorld_PrepareScene(void) {
-  SDL_SetRenderDrawColor(renderer, 32, 32, 32, 255);
-  SDL_RenderClear(renderer);
+void GameWorld_Free(GameWorld* game) {
+  Textures_Free(&textures);
 }
 
-void GameWorld_Update(struct GameWorld* game) {
-  struct InputManager* inputManager = &game->inputManager;
-  InputManager_PollEventAndUpdate(inputManager);
-
-  if (inputManager->gameActions[GAME_ACTION_QUIT]) {
+void GameWorld_Update(GameWorld* game, const Events* events) {
+  if (Events_IsActive(events, EVENT_QUIT)) {
     exit(0);
   }
-  
-  updatePlayer(game);
-  updateEnemies(game);
-  updateBullets(game);
-  spawnEnemy(game);
 
-  if (IS_DEAD(&game->player) && --gameWorldResetTimer <= 0) {
-    GameWorld_Reset(game);
-  }
+  // TODO: update game world
 }
 
-void GameWorld_Draw(struct GameWorld* game) {
+void GameWorld_Draw(GameWorld* game) {
   drawPlayer(game);
-  drawBullets(game);
-  drawEnemies(game);
-}
-
-void GameWorld_PresentScene(void) {
-  SDL_RenderPresent(renderer);
-}
-
-void GameWorld_Destroy(struct GameWorld* game) {
-  SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Cleaning up....\n");
-  
-  destroyBullets(game);
-  destroyEnemies(game);
-  TextureManager_Destroy(&game->textureManager);
-
-  SDL_DestroyRenderer(renderer);
-  SDL_DestroyWindow(window);
-
-  IMG_Quit();
-  SDL_Quit();
-  
-  SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Done!\n");
 }
 
 // Helpers
 
-static void GameWorld_Reset(struct GameWorld* game) {
-  SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Reset game!\n");
-
-  destroyBullets(game);
-  destroyEnemies(game);
-  
+static void resetGameWorld(GameWorld* game) {
+  memset(game, 0, sizeof(GameWorld));
   initPlayer(game);
-  
-  enemySpawnTimer = 0;
-  gameWorldResetTimer = SHOOTER_FPS * 2;
 }
 
-static void initPlayer(struct GameWorld* game) {
-  SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "initPlayer\n");
+static void initPlayer(GameWorld* game) {
+  Entity* player = &game->player;
+  int width, height;  
 
-  struct Player* player = &game->player;
-  memset(player, 0, sizeof(struct Player));
-
-  LOAD_TEXTURE_FOR_ENTITY(game, &player->entity, TEXTURE_PLAYER);
-  ENTITY_SET_POSITION(&player->entity, 100.0f, 100.0f);
+  Textures_Load(&textures, TEXTURE_PLAYER, &width, &height);
+  Entity_SetPositionAndSize(player, 100, 100, width, height);
   
+  player->type = ENTITY_PLAYER;
   player->health = 1;
-  player->reloadTime = 0;
+
+  Entity_SetVelocity(player, SHOOTER_PLAYER_SPEED, 0.0f);
 }
 
-static void updatePlayer(struct GameWorld* game) {
-  const struct InputManager* im = &game->inputManager;
-  struct Player* player = &game->player;
-
-  if (player == NULL) {
-    return;
-  }
-
-  ENTITY_SET_VELOCITY(&player->entity, 0.0f, 0.0f);  
-  player->reloadTime--;
-
-  if (im->gameActions[GAME_ACTION_UP]) {
-    ENTITY_SET_VERTICAL_VELOCITY(&player->entity, -SHOOTER_PLAYER_SPEED);
-  }
-
-  if (im->gameActions[GAME_ACTION_DOWN]) {
-    ENTITY_SET_VERTICAL_VELOCITY(&player->entity, SHOOTER_PLAYER_SPEED);
-  }
-
-  if (im->gameActions[GAME_ACTION_LEFT]) {
-    ENTITY_SET_HORIZONTAL_VELOCITY(&player->entity, -SHOOTER_PLAYER_SPEED);
-  }
-
-  if (im->gameActions[GAME_ACTION_RIGHT]) {
-    ENTITY_SET_HORIZONTAL_VELOCITY(&player->entity, SHOOTER_PLAYER_SPEED);
-  }
-
-  if (im->gameActions[GAME_ACTION_FIRE] && player->reloadTime <= 0) {
-    firePlayerBullet(game);
-  }
-
-  ENTITY_MOVE(&player->entity);
-  ensureEntityStaysInLeftHalfOfScreen(&player->entity);
-}
-
-static void ensureEntityStaysInLeftHalfOfScreen(struct Entity *e) {
-  const float upperBoundX = SHOOTER_WINDOW_WIDTH / 2;
-  const float upperBoundY = SHOOTER_WINDOW_HEIGHT;
-  
-  if (ENTITY_LEFT(e) < 0) {
-    ENTITY_SET_HORIZONTAL_POSITION(e, -0.0f);
-  } else if (ENTITY_RIGHT(e) > upperBoundX) {
-    ENTITY_SET_HORIZONTAL_POSITION(e, upperBoundX - ENTITY_WIDTH(e));
-  }
-
-  if (ENTITY_TOP(e) < 0) {
-    ENTITY_SET_VERTICAL_POSITION(e, -0.0f);
-  } else if (ENTITY_BOTTOM(e) > upperBoundY) {
-    ENTITY_SET_VERTICAL_POSITION(e, upperBoundY - ENTITY_HEIGHT(e));
-  }
-}
-
-static struct Bullet* newBullet(struct GameWorld* game,
-				enum TextureType textureType) {
-  struct Bullet* bullet;
-  size_t bulletSize = sizeof(struct Bullet);
-
-  bullet = malloc(bulletSize);
-  memset(bullet, 0, bulletSize);
-  LOAD_TEXTURE_FOR_ENTITY(game, &bullet->entity, textureType);
-
-  return bullet;
-}
-
-static void firePlayerBullet(struct GameWorld* game) {
-  SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "firePlayerBullet\n");
-
-  struct Player* player = &game->player;
-  struct Bullet* bullet = newBullet(game, TEXTURE_PLAYER_BULLET);
-
-  bullet->origin = BULLET_FROM_PLAYER;
-  ENTITY_SET_POSITION_RELATIVE(&bullet->entity, &player->entity);
-  ENTITY_SET_VELOCITY(&bullet->entity, SHOOTER_PLAYER_BULLET_SPEED, 0.0f);  
-  
-  GAME_WORLD_ADD_BULLET(game, bullet);
-  player->reloadTime = 8;
-}
-
-static void updateBullets(struct GameWorld* game) {
-  struct Bullet *b, *prev;
-  prev = &game->bulletHead;
-
-  for (b = game->bulletHead.next; b != NULL; b = b->next) {
-    ENTITY_MOVE(&b->entity);
-
-    if (IS_BULLET_OFF_SCREEN(b) || checkBulletHit(game, b)) {
-      if (b == game->bulletTail) {
-	game->bulletTail = prev;
-      }
-
-      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Free a bullet\n");
-      
-      prev->next = b->next;
-      free(b);
-      b = prev;
-    }
-
-    prev = b;
-  }
-}
-
-static bool checkBulletHit(struct GameWorld* game,
-			   const struct Bullet* bullet) {
-  if (bullet->origin == BULLET_FROM_ENEMY) {
-    return checkBulletHitPlayer(game, bullet);
-  } else {
-    return checkBulletHitEnemy(game, bullet);
-  }
-}
-
-static bool checkBulletHitPlayer(struct GameWorld* game,
-				 const struct Bullet* bullet) {
-  if (Entity_HasCollided(&bullet->entity, &game->player.entity)) {
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Bullet hit Player!\n");
-    game->player.health = 0;
-    return true;
-  }
-
-  return false;
-}
-
-static bool checkBulletHitEnemy(struct GameWorld* game,
-				const struct Bullet* bullet) {
-  struct Enemy* e;
-
-  for (e = game->enemyHead.next; e != NULL; e = e->next) {
-    if (Entity_HasCollided(&bullet->entity, &e->entity)) {
-      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Bullet hit Enemy!\n");
-      e->health = 0;
-      return true;
-    }
-  }
-
-  return false;
-}
-
-static void spawnEnemy(struct GameWorld* game) {
-  struct Enemy* enemy;
-  size_t enemySize = sizeof(struct Enemy);
-  
-  if (--enemySpawnTimer <= 0) {
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "spawnEnemy\n");
-
-    enemy = malloc(enemySize);
-    memset(enemy, 0, enemySize);
-
-    LOAD_TEXTURE_FOR_ENTITY(game, &enemy->entity, TEXTURE_ENEMY);
-    ENTITY_SET_POSITION(&enemy->entity, SHOOTER_WINDOW_WIDTH,
-			rand() % SHOOTER_WINDOW_HEIGHT);
-    ENTITY_SET_VELOCITY(&enemy->entity, -(2 + (rand() % 4)), 0.0f);
-
-    enemy->health = 1;
-    enemy->reloadTime = SHOOTER_FPS * (1 + (rand() % 3));
-    
-    GAME_WORLD_ADD_ENEMY(game, enemy);
-    enemySpawnTimer = 30 + (rand() % SHOOTER_FPS);
-  }
-}
-
-static void updateEnemies(struct GameWorld* game) {
-  struct Enemy *e, *prev;
-  prev = &game->enemyHead;
-
-  for (e = game->enemyHead.next; e != NULL; e = e->next) {
-    ENTITY_MOVE(&e->entity);
-
-    if (IS_ENEMY_OFF_SCREEN(e) || IS_DEAD(e)) {
-      if (e == game->enemyTail) {
-	game->enemyTail = prev;
-      }
-
-      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Free an enemy\n");
-      
-      prev->next = e->next;
-      free(e);
-      e = prev;
-    } else if (--e->reloadTime < 0) {
-      fireEnemyBullet(game, e);
-    }
-
-    prev = e;
-  }
-}
-
-static void fireEnemyBullet(struct GameWorld* game, struct Enemy* enemy) {
-  struct Bullet* bullet;
-
-  bullet = newBullet(game, TEXTURE_ENEMY_BULLET);
-  bullet->origin = BULLET_FROM_ENEMY;
-
-  ENTITY_SET_POSITION_RELATIVE(&bullet->entity, &enemy->entity);
-  ENTITY_SET_VELOCITY(&bullet->entity, -SHOOTER_ENEMY_BULLET_SPEED, 0.0f);
-  
-  GAME_WORLD_ADD_BULLET(game, bullet);
-  enemy->reloadTime = (rand() % SHOOTER_FPS * 2);
-}
-
-static void drawPlayer(struct GameWorld* game) {
-  TextureManager_Render(&game->textureManager,
-			game->player.entity.textureType,
-			game->player.entity.x,
-			game->player.entity.y);
-}
-
-static void drawBullets(struct GameWorld* game) {
-  struct Bullet* b;
-
-  for (b = game->bulletHead.next; b != NULL; b = b->next) {
-    TextureManager_Render(&game->textureManager,
-			  b->entity.textureType,
-			  b->entity.x,
-			  b->entity.y);
-  }
-}
-
-static void drawEnemies(struct GameWorld* game) {
-  struct Enemy* e;
-
-  for (e = game->enemyHead.next; e != NULL; e = e->next) {
-    TextureManager_Render(&game->textureManager,
-			  e->entity.textureType,
-			  e->entity.x,
-			  e->entity.y);
-  }
-}
-
-static void destroyBullets(struct GameWorld* game) {
-  struct Bullet* b;
-
-  for (b = game->bulletHead.next; b != NULL; b = b->next) {
-    free(b);
-  }
-
-  memset(&game->bulletHead, 0, sizeof(struct Bullet));
-  game->bulletTail = &game->bulletHead;
-}
-
-static void destroyEnemies(struct GameWorld* game) {
-  struct Enemy* e;
-
-  for (e = game->enemyHead.next; e != NULL; e = e->next) {
-    free(e);
-  }
-
-  memset(&game->enemyHead, 0, sizeof(struct Enemy));
-  game->enemyTail = &game->enemyHead;
-}
-
-void initSDL(void) {
-  const int windowFlags = 0;
-  const int rendererFlags = SDL_RENDERER_ACCELERATED;  
-  const int imgFlags = IMG_INIT_PNG | IMG_INIT_JPG;
-
-  if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-		 "SDL could not initialize! SDL_Error: %s\n",
-		 SDL_GetError());
-    exit(1);
-  }
-
-  window = SDL_CreateWindow("Shooter",
-			    SDL_WINDOWPOS_UNDEFINED,
-			    SDL_WINDOWPOS_UNDEFINED,
-			    SHOOTER_WINDOW_WIDTH,
-			    SHOOTER_WINDOW_HEIGHT,
-			    windowFlags);
-
-  if (!window) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-		 "Window could not be created! SDL_Error: %s\n",
-		 SDL_GetError());
-    exit(1);
-  }
-
-  SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
-  renderer = SDL_CreateRenderer(window, -1, rendererFlags);
-
-  if (!renderer) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-		 "Renderer could not be created! SDL_Error: %s\n",
-		 SDL_GetError());
-    exit(1);
-  }
-
-  if ((IMG_Init(imgFlags) & imgFlags) != imgFlags) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-		 "SDL_image could not initialize! SDL_image error: %s\n",
-		 IMG_GetError());
-    exit(1);
-  }
+static void drawPlayer(GameWorld* game) {
+  int x = game->player.hitbox.x;
+  int y = game->player.hitbox.y;  
+  Textures_Render(&textures, TEXTURE_PLAYER, x, y);
 }
