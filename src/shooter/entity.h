@@ -46,6 +46,8 @@ typedef struct EntityList {
   EntityNode *tail;
 } EntityList;
 
+#define ENTITY_W(E) ((E)->hitbox.w)
+#define ENTITY_H(E) ((E)->hitbox.h)
 
 void Entity_SetRect(Entity* entity, SDL_Rect rect);
 void Entity_SetPositionAndSize(Entity* entity, int x, int y, int w, int h);

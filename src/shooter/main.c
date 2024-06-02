@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <time.h>
 #include "shooter/defs.h"
 #include "shooter/game_context.h"
 #include "shooter/events.h"
@@ -12,6 +13,9 @@ FrameRate g_frameRate;
 static void cleanup(void);
 
 int main(void) {
+  // Seed the random number generator
+  srand(time(NULL));
+  
   GameContext_Init(&g_gameContext, "Shooter", SHOOTER_WINDOW_WIDTH,
 		   SHOOTER_WINDOW_HEIGHT);
   GameWorld_Init(&g_gameContext);

@@ -2,6 +2,7 @@
 #include "shooter/defs.h"
 #include "shooter/textures.h"
 #include "shooter/game_world.h"
+#include "shooter/utils.h"
 
 static const SDL_Rect playerClipRect = {
   0, 0,
@@ -20,6 +21,7 @@ static EntityList bullets;
 static EntityList enemies;
 
 static int enemySpawnTimer;
+static int gameWorldResetTimer;
 
 static void resetGameWorld();
 
@@ -31,7 +33,9 @@ static void updateBullet(Entity* bullet);
 static void updateBullets();
 
 static void spawnEnemy();
+static void updateEnemy(Entity* enemy);
 static void updateEnemies();
+static void fireEnemyBullet(const Entity* enemy);
 
 static void moveEntity(Entity* entity);
 static void drawEntity(Entity* entity);
@@ -64,6 +68,10 @@ void GameWorld_Update(const Events* events) {
   updateEnemies();
   updateBullets();  
   spawnEnemy();
+
+  if (player.health <= 0 && --gameWorldResetTimer <= 0) {
+    resetGameWorld();
+  }
 }
 
 void GameWorld_Draw() {
@@ -81,6 +89,7 @@ static void resetGameWorld() {
   EntityList_Free(&enemies);
 
   enemySpawnTimer = 0;
+  gameWorldResetTimer = SHOOTER_FPS * 2;
 }
 
 static void initPlayer() {
@@ -144,11 +153,10 @@ static void updateBullets() {
 }
 
 static void updateBullet(Entity* bullet) {
-  Entity_Move(bullet, 1.0f);
+  moveEntity(bullet);
   
   if (bullet->type == ENTITY_ENEMY_BULLET &&
-      Entity_CheckCollision(bullet, &player)) {
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Bullet hit Player!");
+      Entity_CheckCollision(bullet, &player)) {    
     player.health = 0;
     bullet->health = 0;
     return;
@@ -167,20 +175,50 @@ static void spawnEnemy() {
     enemy->textureType = TEXTURE_ENEMY;
     Textures_Load(&textures, enemy);
 
-    Entity_Place(enemy, windowBounds.w, rand() % windowBounds.h);
-    Entity_SetVelocity(enemy, -(2 + (rand() % 4)), 0.0f);
+    int xPos = windowBounds.w;
+    int minY = 0;
+    int maxY = windowBounds.h - ENTITY_H(enemy);
+
+    Entity_Place(enemy, xPos, randomInt(minY, maxY));
+    Entity_SetVelocity(enemy, randomInt(-5, -2), 0.0f);
 
     enemy->health = 1;
-    enemy->reloadTime = SHOOTER_FPS * (1 + (rand() % 3));
 
-    enemySpawnTimer = 30 + (rand() % SHOOTER_FPS);
+    int reloadTimeMin = -(ENTITY_W(enemy) / enemy->dx);
+    enemy->reloadTime = randomInt(reloadTimeMin, reloadTimeMin + 8);
+
+    enemySpawnTimer = randomInt(SHOOTER_FPS / 2, 2 * SHOOTER_FPS);
   }
 }
 
 static void updateEnemies() {
   EntityList_ForEachAndPrune(&enemies,
-			     &moveEntity,
+			     &updateEnemy,
 			     &isEnemyOutOfBoundsOrDead);
+}
+
+static void updateEnemy(Entity* enemy) {
+  moveEntity(enemy);
+  --enemy->reloadTime;
+
+  if (enemy->health > 0 && enemy->reloadTime <= 0) {
+    fireEnemyBullet(enemy);
+    enemy->reloadTime = rand() % SHOOTER_FPS * 2;
+  }
+}
+
+static void fireEnemyBullet(const Entity* enemy) {
+  Entity* bullet;
+  bullet = EntityList_Add(&bullets, ENTITY_ENEMY_BULLET);
+
+  bullet->textureType = TEXTURE_ENEMY_BULLET;
+  Textures_Load(&textures, bullet);
+
+  bullet->type = ENTITY_ENEMY_BULLET;
+  bullet->health = 1;
+
+  Entity_PlaceAtCenter(bullet, enemy);
+  Entity_SetVelocity(bullet, -SHOOTER_ENEMY_BULLET_SPEED, 0.0f);
 }
 
 static void moveEntity(Entity* entity) {
@@ -210,7 +248,6 @@ static bool isEnemyOutOfBoundsOrDead(const Entity* enemy) {
 
 static void checkCollision(Entity* e1, Entity* e2) {
   if (Entity_CheckCollision(e1, e2)) {
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Collision detected!");
     e1->health = 0;
     e2->health = 0;
   }

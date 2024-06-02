@@ -142,8 +142,7 @@ Entity* EntityList_Add(EntityList* list, EntityType type) {
 void EntityList_Free(EntityList* list) {
   EntityNode* current = list->head.next;
 
-  while (current != NULL) {
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Free an entity!");
+  while (current != NULL) {    
     EntityNode* next = current->next;
     free(current);
     current = next;
@@ -181,8 +180,6 @@ void EntityList_ForEachAndPrune(EntityList* list,
       if (node == list->tail) {
 	list->tail = prev;
       }
-
-      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Free an entity!");
       
       prev->next = node->next;
       free(node);

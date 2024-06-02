@@ -13,6 +13,7 @@ if (SDL2_IMAGE_FOUND)
 endif()
 
 set(SHOOTER_SRCS
+  utils.c
   game_context.c
   events.c
   textures.c
