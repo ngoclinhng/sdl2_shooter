@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <SDL2/SDL.h>
+#include "shooter/textures.h"
 
 typedef enum EntityType {
   ENTITY_PLAYER,
@@ -10,14 +11,6 @@ typedef enum EntityType {
   ENTITY_PLAYER_BULLET,
   ENTITY_ENEMY_BULLET
 } EntityType;
-
-typedef enum TextureType {
-  TEXTURE_PLAYER,
-  TEXTURE_PLAYER_BULLET,
-  TEXTURE_ENEMY,
-  TEXTURE_ENEMY_BULLET,
-  TEXTURE_COUNT
-} TextureType;
 
 typedef enum OutOfBoundsFlags {
   OUT_OF_BOUNDS_NONE = 0,

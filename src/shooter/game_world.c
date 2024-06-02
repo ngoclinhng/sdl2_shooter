@@ -22,9 +22,11 @@ static EntityList enemies;
 
 static int enemySpawnTimer;
 static int gameWorldResetTimer;
+static int backgroundX;
 
 static void resetGameWorld();
 
+static void updateBackground(void);
 static void initPlayer();
 static void updatePlayer(const Events* events);
 
@@ -39,6 +41,7 @@ static void fireEnemyBullet(const Entity* enemy);
 
 static void moveEntity(Entity* entity);
 static void drawEntity(Entity* entity);
+static void drawBackground(void);
 
 static bool isBulletOutOfBoundsOrDead(const Entity* bullet);
 static bool isEnemyOutOfBoundsOrDead(const Entity* enemy);
@@ -46,6 +49,7 @@ static void checkCollision(Entity* e1, Entity* e2);
 
 void GameWorld_Init(GameContext* context) {
   Textures_Init(&textures, context->renderer);
+  Textures_LoadAndStore(&textures, TEXTURE_BACKGROUND);
 
   EntityList_Init(&bullets);
   EntityList_Init(&enemies);
@@ -64,6 +68,7 @@ void GameWorld_Update(const Events* events) {
     exit(0);
   }
 
+  updateBackground();
   updatePlayer(events);
   updateEnemies();
   updateBullets();  
@@ -75,6 +80,7 @@ void GameWorld_Update(const Events* events) {
 }
 
 void GameWorld_Draw() {
+  drawBackground();
   drawEntity(&player);
   EntityList_ForEach(&bullets, &drawEntity);
   EntityList_ForEach(&enemies, &drawEntity);
@@ -90,6 +96,7 @@ static void resetGameWorld() {
 
   enemySpawnTimer = 0;
   gameWorldResetTimer = SHOOTER_FPS * 2;
+  backgroundX = 0;
 }
 
 static void initPlayer() {
@@ -100,7 +107,7 @@ static void initPlayer() {
   player.health = 1;
   player.reloadTime = 0;
 
-  Textures_Load(&textures, &player);
+  Textures_LoadTextureForEntity(&textures, &player);
   Entity_Place(&player, 100, 100);  
 }
 
@@ -137,7 +144,7 @@ static void firePlayerBullet() {
   bullet = EntityList_Add(&bullets, ENTITY_PLAYER_BULLET);
 
   bullet->textureType = TEXTURE_PLAYER_BULLET;
-  Textures_Load(&textures, bullet);
+  Textures_LoadTextureForEntity(&textures, bullet);
   
   Entity_PlaceAtCenter(bullet, &player);
   Entity_SetVelocity(bullet, SHOOTER_PLAYER_BULLET_SPEED, 0.0f);
@@ -173,7 +180,7 @@ static void spawnEnemy() {
     enemy = EntityList_Add(&enemies, ENTITY_ENEMY);
 
     enemy->textureType = TEXTURE_ENEMY;
-    Textures_Load(&textures, enemy);
+    Textures_LoadTextureForEntity(&textures, enemy);
 
     int xPos = windowBounds.w;
     int minY = 0;
@@ -214,7 +221,7 @@ static void fireEnemyBullet(const Entity* enemy) {
   bullet = EntityList_Add(&bullets, ENTITY_ENEMY_BULLET);
 
   bullet->textureType = TEXTURE_ENEMY_BULLET;
-  Textures_Load(&textures, bullet);
+  Textures_LoadTextureForEntity(&textures, bullet);
 
   bullet->type = ENTITY_ENEMY_BULLET;
   bullet->health = 1;
@@ -234,7 +241,7 @@ static void moveEntity(Entity* entity) {
 }
 
 static void drawEntity(Entity* entity) {
-  Textures_Render(&textures, entity);
+  Textures_RenderEntity(&textures, entity);
 }
 
 static bool isBulletOutOfBoundsOrDead(const Entity* bullet) {
@@ -258,5 +265,25 @@ static void checkCollision(Entity* e1, Entity* e2) {
   if (Entity_CheckCollision(e1, e2)) {
     e1->health = 0;
     e2->health = 0;
+  }
+}
+
+static void updateBackground(void) {
+  if (--backgroundX < -windowBounds.w) {
+    backgroundX = 0;
+  }
+}
+
+static void drawBackground(void) {
+  SDL_Rect dst;
+  int x;
+
+  for (x = 0; x < windowBounds.w; x += windowBounds.w) {
+      dst.x = x;
+      dst.y = 0;
+      dst.w = windowBounds.w;
+      dst.h = windowBounds.h;
+
+      Textures_RenderFull(&textures, TEXTURE_BACKGROUND, &dst);
   }
 }

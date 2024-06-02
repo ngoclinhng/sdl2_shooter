@@ -1,12 +1,14 @@
 #include <string.h>
 #include <SDL2/SDL_image.h>
 #include "shooter/textures.h"
+#include "shooter/entity.h"
 
 static const char* const textureFileNames[TEXTURE_COUNT] = {
   "gfx/player.png",
   "gfx/playerBullet.png",
   "gfx/enemy.png",
-  "gfx/enemyBullet.png"
+  "gfx/enemyBullet.png",
+  "gfx/background.png"
 };
 
 static SDL_Texture* loadTexture(Textures* self, TextureType type);
@@ -16,7 +18,32 @@ void Textures_Init(Textures* self, SDL_Renderer* renderer) {
   self->renderer = renderer;
 }
 
-void Textures_Load(Textures* self, Entity* entity) {
+void Textures_LoadAndStore(Textures* self, TextureType type) {
+  loadTexture(self, type);  
+}
+
+void Textures_RenderFull(Textures* self, TextureType type, SDL_Rect* dst) {
+  SDL_Texture* texture = loadTexture(self, type);
+
+  if (texture == NULL) {
+    return;
+  }
+
+  SDL_RenderCopy(self->renderer, texture, NULL, dst);
+}
+
+void Textures_RenderPortion(Textures* self, TextureType type, SDL_Rect* src,
+			    SDL_Rect* dst) {
+  SDL_Texture* texture = loadTexture(self, type);
+
+  if (texture == NULL) {
+    return;
+  }
+
+  SDL_RenderCopy(self->renderer, texture, src, dst);
+}
+
+void Textures_LoadTextureForEntity(Textures* self, Entity* entity) {
   TextureType type = entity->textureType;  
   SDL_Texture* texture = loadTexture(self, type);
 
@@ -29,7 +56,7 @@ void Textures_Load(Textures* self, Entity* entity) {
   SDL_QueryTexture(texture, NULL, NULL, w, h);
 }
 
-void Textures_Render(Textures* self, Entity* entity) {
+void Textures_RenderEntity(Textures* self, Entity* entity) {
   TextureType type = entity->textureType;
   SDL_Texture* texture = loadTexture(self, type);
 
