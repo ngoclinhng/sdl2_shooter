@@ -201,9 +201,11 @@ static void updateEnemy(Entity* enemy) {
   moveEntity(enemy);
   --enemy->reloadTime;
 
+  checkCollision(enemy, &player);
+
   if (enemy->health > 0 && enemy->reloadTime <= 0) {
     fireEnemyBullet(enemy);
-    enemy->reloadTime = rand() % SHOOTER_FPS * 2;
+    enemy->reloadTime = randomInt(0, SHOOTER_FPS * 2);
   }
 }
 
@@ -218,7 +220,13 @@ static void fireEnemyBullet(const Entity* enemy) {
   bullet->health = 1;
 
   Entity_PlaceAtCenter(bullet, enemy);
-  Entity_SetVelocity(bullet, -SHOOTER_ENEMY_BULLET_SPEED, 0.0f);
+
+  float dx, dy;
+  Entity_GetDirectionalVector(bullet, &player, &dx, &dy);
+
+  dx *= SHOOTER_ENEMY_BULLET_SPEED;
+  dy *= SHOOTER_ENEMY_BULLET_SPEED;
+  Entity_SetVelocity(bullet, dx, dy);
 }
 
 static void moveEntity(Entity* entity) {

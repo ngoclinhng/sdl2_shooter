@@ -2,6 +2,7 @@
 #include <string.h>
 #include <assert.h>
 #include "shooter/entity.h"
+#include "shooter/defs.h"
 
 #define TOP(R) ((R)->y)
 #define RIGHT(R) ((R)->x + (R)->w)
@@ -47,6 +48,29 @@ void Entity_SetVelocityY(Entity* entity, float dy) {
 void Entity_Move(Entity* entity, float dt) {
   entity->hitbox.x += (int)(entity->dx * dt);
   entity->hitbox.y += (int)(entity->dy * dt);
+}
+
+void Entity_GetDirectionalVector(const Entity* e1, const Entity* e2,
+				 float* dx, float* dy) {
+  int x1 = CENTER_X(&e1->hitbox);
+  int y1 = CENTER_Y(&e1->hitbox);
+
+  int x2 = CENTER_X(&e2->hitbox);
+  int y2 = CENTER_Y(&e2->hitbox);
+
+  int steps = MAX(abs(x1 - x2), abs(y1 - y2));
+
+  if (steps == 0) {
+    *dx = 0.0f;
+    *dy = 0.0f;
+    return;
+  }
+
+  *dx = (x2 - x1);
+  *dx /= steps;
+
+  *dy = (y2 - y1);
+  *dy /= steps;
 }
 
 bool Entity_CheckCollision(const Entity* a, const Entity* b) {

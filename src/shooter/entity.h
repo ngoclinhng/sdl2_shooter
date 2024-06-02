@@ -60,6 +60,9 @@ void Entity_SetVelocityX(Entity* entity, float dx);
 void Entity_SetVelocityY(Entity* entity, float dy);
 void Entity_Move(Entity* entity, float dt);
 
+void Entity_GetDirectionalVector(const Entity* e1, const Entity* e2,
+				 float* dx, float* dy);
+
 bool Entity_CheckCollision(const Entity* entity1, const Entity* entity2);
 
 OutOfBoundsFlags
