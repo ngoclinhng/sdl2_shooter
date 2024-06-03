@@ -45,6 +45,17 @@ void Entity_SetVelocityY(Entity* entity, float dy) {
   entity->dy = dy;
 }
 
+void Entity_SetTexture(Entity* entity, Textures* textures,
+		       TextureType textureType) {
+  entity->textureType = textureType;
+  Textures_GetSize(textures, textureType, &entity->hitbox.w,
+		   &entity->hitbox.h);
+}
+
+void Entity_Render(const Entity* entity, Textures* textures) {
+  Textures_RenderFull(textures, entity->textureType, &entity->hitbox);
+}
+
 void Entity_Move(Entity* entity, float dt) {
   entity->hitbox.x += (int)(entity->dx * dt);
   entity->hitbox.y += (int)(entity->dy * dt);

@@ -1,6 +1,5 @@
 #include <string.h>
 #include "shooter/defs.h"
-#include "shooter/textures.h"
 #include "shooter/game_world.h"
 #include "shooter/utils.h"
 
@@ -49,6 +48,11 @@ static void checkCollision(Entity* e1, Entity* e2);
 
 void GameWorld_Init(GameContext* context) {
   Textures_Init(&textures, context->renderer);
+
+  Textures_LoadAndStore(&textures, TEXTURE_PLAYER);
+  Textures_LoadAndStore(&textures, TEXTURE_PLAYER_BULLET);
+  Textures_LoadAndStore(&textures, TEXTURE_ENEMY);
+  Textures_LoadAndStore(&textures, TEXTURE_ENEMY_BULLET);
   Textures_LoadAndStore(&textures, TEXTURE_BACKGROUND);
 
   EntityList_Init(&bullets);
@@ -103,11 +107,10 @@ static void initPlayer() {
   memset(&player, 0, sizeof(Entity));
 
   player.type = ENTITY_PLAYER;
-  player.textureType = TEXTURE_PLAYER;
   player.health = 1;
   player.reloadTime = 0;
-
-  Textures_LoadTextureForEntity(&textures, &player);
+  
+  Entity_SetTexture(&player, &textures, TEXTURE_PLAYER);
   Entity_Place(&player, 100, 100);  
 }
 
@@ -143,9 +146,7 @@ static void firePlayerBullet() {
   Entity* bullet;
   bullet = EntityList_Add(&bullets, ENTITY_PLAYER_BULLET);
 
-  bullet->textureType = TEXTURE_PLAYER_BULLET;
-  Textures_LoadTextureForEntity(&textures, bullet);
-  
+  Entity_SetTexture(bullet, &textures, TEXTURE_PLAYER_BULLET);
   Entity_PlaceAtCenter(bullet, &player);
   Entity_SetVelocity(bullet, SHOOTER_PLAYER_BULLET_SPEED, 0.0f);
 
@@ -179,8 +180,7 @@ static void spawnEnemy() {
     Entity* enemy;
     enemy = EntityList_Add(&enemies, ENTITY_ENEMY);
 
-    enemy->textureType = TEXTURE_ENEMY;
-    Textures_LoadTextureForEntity(&textures, enemy);
+    Entity_SetTexture(enemy, &textures, TEXTURE_ENEMY);
 
     int xPos = windowBounds.w;
     int minY = 0;
@@ -220,8 +220,7 @@ static void fireEnemyBullet(const Entity* enemy) {
   Entity* bullet;
   bullet = EntityList_Add(&bullets, ENTITY_ENEMY_BULLET);
 
-  bullet->textureType = TEXTURE_ENEMY_BULLET;
-  Textures_LoadTextureForEntity(&textures, bullet);
+  Entity_SetTexture(bullet, &textures, TEXTURE_ENEMY_BULLET);
 
   bullet->type = ENTITY_ENEMY_BULLET;
   bullet->health = 1;
@@ -241,7 +240,7 @@ static void moveEntity(Entity* entity) {
 }
 
 static void drawEntity(Entity* entity) {
-  Textures_RenderEntity(&textures, entity);
+  Entity_Render(entity, &textures);
 }
 
 static bool isBulletOutOfBoundsOrDead(const Entity* bullet) {

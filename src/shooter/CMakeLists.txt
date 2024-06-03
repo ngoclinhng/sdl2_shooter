@@ -63,6 +63,6 @@ if (BUILD_TESTING)
       COMMAND ${CMAKE_BINARY_DIR}/tests/${TESTNAME}_test)
   endmacro()
 
-  shooter_test(entity entity.c)
+  shooter_test(entity entity.c textures.c)
   shooter_test(game_context game_context.c)
 endif()
