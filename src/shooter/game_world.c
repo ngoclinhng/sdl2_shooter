@@ -23,19 +23,19 @@ static int enemySpawnTimer;
 static int gameWorldResetTimer;
 static int backgroundX;
 
-static void resetGameWorld();
+static void resetGameWorld(void);
 
 static void updateBackground(void);
-static void initPlayer();
+static void initPlayer(void);
 static void updatePlayer(const Events* events);
 
-static void firePlayerBullet();
+static void firePlayerBullet(void);
 static void updateBullet(Entity* bullet);
-static void updateBullets();
+static void updateBullets(void);
 
-static void spawnEnemy();
+static void spawnEnemy(void);
 static void updateEnemy(Entity* enemy);
-static void updateEnemies();
+static void updateEnemies(void);
 static void fireEnemyBullet(const Entity* enemy);
 
 static void moveEntity(Entity* entity);
@@ -92,7 +92,7 @@ void GameWorld_Draw() {
 
 // Helpers
 
-static void resetGameWorld() {  
+static void resetGameWorld(void) {  
   initPlayer();
 
   EntityList_Free(&bullets);
@@ -103,7 +103,7 @@ static void resetGameWorld() {
   backgroundX = 0;
 }
 
-static void initPlayer() {
+static void initPlayer(void) {
   memset(&player, 0, sizeof(Entity));
 
   player.type = ENTITY_PLAYER;
@@ -142,7 +142,7 @@ static void updatePlayer(const Events* events) {
   Entity_Clip(&player, &playerClipRect);
 }
 
-static void firePlayerBullet() {
+static void firePlayerBullet(void) {
   Entity* bullet;
   bullet = EntityList_Add(&bullets, ENTITY_PLAYER_BULLET);
 
@@ -154,7 +154,7 @@ static void firePlayerBullet() {
   player.reloadTime = 8;
 }
 
-static void updateBullets() {
+static void updateBullets(void) {
   EntityList_ForEachAndPrune(&bullets,
 			     &updateBullet,
 			     &isBulletOutOfBoundsOrDead);
@@ -175,7 +175,7 @@ static void updateBullet(Entity* bullet) {
   }
 }
 
-static void spawnEnemy() {
+static void spawnEnemy(void) {
   if (--enemySpawnTimer <= 0) {
     Entity* enemy;
     enemy = EntityList_Add(&enemies, ENTITY_ENEMY);
@@ -198,7 +198,7 @@ static void spawnEnemy() {
   }
 }
 
-static void updateEnemies() {
+static void updateEnemies(void) {
   EntityList_ForEachAndPrune(&enemies,
 			     &updateEnemy,
 			     &isEnemyOutOfBoundsOrDead);
