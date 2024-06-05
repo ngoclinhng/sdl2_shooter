@@ -51,8 +51,8 @@ void LinkedList_ForEach(LinkedList* list, void (*func)(void*)) {
   }
 }
 
-void LinkedList_ForEachWith(LinkedList* list, const void* other,
-			    void (*func)(void*, const void*)) {
+void LinkedList_ForEachWith(LinkedList* list, void* other,
+			    void (*func)(void*, void*)) {
   ListNode* current = list->head.next;
 
   while (current != NULL) {

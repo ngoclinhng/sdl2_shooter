@@ -29,16 +29,6 @@ typedef struct Entity {
   int reloadTime;
 } Entity;
 
-typedef struct EntityNode {
-  Entity entity;
-  struct EntityNode* next;
-} EntityNode;
-
-typedef struct EntityList {
-  EntityNode head;
-  EntityNode *tail;
-} EntityList;
-
 #define ENTITY_W(E) ((E)->hitbox.w)
 #define ENTITY_H(E) ((E)->hitbox.h)
 
@@ -73,19 +63,5 @@ bool Entity_IsToTheRightOf(const Entity* entity, int x);
 
 bool Entity_IsAbove(const Entity* entity, int y);
 bool Entity_IsBelow(const Entity* entity, int y);
-
-
-void EntityList_Init(EntityList* list);
-Entity* EntityList_Add(EntityList* list, EntityType type);
-void EntityList_Free(EntityList* list);
-
-void EntityList_ForEach(EntityList* list, void (*processFunc)(Entity*));
-
-void EntityList_ForEachWith(EntityList* list, Entity* other,
-			    void (*processFunc)(Entity*, Entity*));
-
-void EntityList_ForEachAndPrune(EntityList* list,
-				void (*processFunc)(Entity*),
-				bool (*shouldRemove)(const Entity*));
 
 #endif // SHOOTER_GEOMETRY_H_

@@ -1,5 +1,6 @@
 #include <string.h>
 #include "shooter/defs.h"
+#include "shooter/linked_list.h"
 #include "shooter/game_world.h"
 #include "shooter/utils.h"
 
@@ -16,8 +17,8 @@ static const SDL_Rect windowBounds = {
 static Textures textures;
 
 static Entity player;
-static EntityList bullets;
-static EntityList enemies;
+static LinkedList bullets;
+static LinkedList enemies;
 
 static int enemySpawnTimer;
 static int gameWorldResetTimer;
@@ -30,21 +31,21 @@ static void initPlayer(void);
 static void updatePlayer(const Events* events);
 
 static void firePlayerBullet(void);
-static void updateBullet(Entity* bullet);
+static void updateBullet(void* bullet);
 static void updateBullets(void);
 
 static void spawnEnemy(void);
-static void updateEnemy(Entity* enemy);
+static void updateEnemy(void* enemy);
 static void updateEnemies(void);
 static void fireEnemyBullet(const Entity* enemy);
 
 static void moveEntity(Entity* entity);
-static void drawEntity(Entity* entity);
+static void drawEntity(void* entity);
 static void drawBackground(void);
 
-static bool isBulletOutOfBoundsOrDead(const Entity* bullet);
-static bool isEnemyOutOfBoundsOrDead(const Entity* enemy);
-static void checkCollision(Entity* e1, Entity* e2);
+static bool isBulletOutOfBoundsOrDead(const void* bullet);
+static bool isEnemyOutOfBoundsOrDead(const void* enemy);
+static void checkCollision(void* entity1, void* entity2);
 
 void GameWorld_Init(GameContext* context) {
   Textures_Init(&textures, context->renderer);
@@ -55,15 +56,15 @@ void GameWorld_Init(GameContext* context) {
   Textures_LoadAndStore(&textures, TEXTURE_ENEMY_BULLET);
   Textures_LoadAndStore(&textures, TEXTURE_BACKGROUND);
 
-  EntityList_Init(&bullets);
-  EntityList_Init(&enemies);
+  LinkedList_Init(&bullets);
+  LinkedList_Init(&enemies);
   
   resetGameWorld();
 }
 
 void GameWorld_Free() {
-  EntityList_Free(&bullets);
-  EntityList_Free(&enemies);
+  LinkedList_Free(&bullets);
+  LinkedList_Free(&enemies);
   Textures_Free(&textures);
 }
 
@@ -86,8 +87,8 @@ void GameWorld_Update(const Events* events) {
 void GameWorld_Draw() {
   drawBackground();
   drawEntity(&player);
-  EntityList_ForEach(&bullets, &drawEntity);
-  EntityList_ForEach(&enemies, &drawEntity);
+  LinkedList_ForEach(&bullets, &drawEntity);
+  LinkedList_ForEach(&enemies, &drawEntity);
 }
 
 // Helpers
@@ -95,8 +96,8 @@ void GameWorld_Draw() {
 static void resetGameWorld(void) {  
   initPlayer();
 
-  EntityList_Free(&bullets);
-  EntityList_Free(&enemies);
+  LinkedList_Free(&bullets);
+  LinkedList_Free(&enemies);
 
   enemySpawnTimer = 0;
   gameWorldResetTimer = SHOOTER_FPS * 2;
@@ -144,7 +145,9 @@ static void updatePlayer(const Events* events) {
 
 static void firePlayerBullet(void) {
   Entity* bullet;
-  bullet = EntityList_Add(&bullets, ENTITY_PLAYER_BULLET);
+
+  bullet = LinkedList_Add(&bullets, sizeof(Entity));
+  bullet->type = ENTITY_PLAYER_BULLET;
 
   Entity_SetTexture(bullet, &textures, TEXTURE_PLAYER_BULLET);
   Entity_PlaceAtCenter(bullet, &player);
@@ -155,12 +158,14 @@ static void firePlayerBullet(void) {
 }
 
 static void updateBullets(void) {
-  EntityList_ForEachAndPrune(&bullets,
+  LinkedList_ForEachAndPrune(&bullets,
 			     &updateBullet,
 			     &isBulletOutOfBoundsOrDead);
 }
 
-static void updateBullet(Entity* bullet) {
+static void updateBullet(void* b) {
+  Entity* bullet = (Entity*) b;
+  
   moveEntity(bullet);
   
   if (bullet->type == ENTITY_ENEMY_BULLET &&
@@ -171,14 +176,15 @@ static void updateBullet(Entity* bullet) {
   }
 
   if (bullet->type == ENTITY_PLAYER_BULLET) {       
-    EntityList_ForEachWith(&enemies, bullet, &checkCollision);
+    LinkedList_ForEachWith(&enemies, bullet, &checkCollision);
   }
 }
 
 static void spawnEnemy(void) {
   if (--enemySpawnTimer <= 0) {
     Entity* enemy;
-    enemy = EntityList_Add(&enemies, ENTITY_ENEMY);
+    enemy = LinkedList_Add(&enemies, sizeof(Entity));
+    enemy->type = ENTITY_ENEMY;
 
     Entity_SetTexture(enemy, &textures, TEXTURE_ENEMY);
 
@@ -199,12 +205,14 @@ static void spawnEnemy(void) {
 }
 
 static void updateEnemies(void) {
-  EntityList_ForEachAndPrune(&enemies,
+  LinkedList_ForEachAndPrune(&enemies,
 			     &updateEnemy,
 			     &isEnemyOutOfBoundsOrDead);
 }
 
-static void updateEnemy(Entity* enemy) {
+static void updateEnemy(void* e) {
+  Entity* enemy = (Entity*) e;
+  
   moveEntity(enemy);
   --enemy->reloadTime;
 
@@ -218,7 +226,9 @@ static void updateEnemy(Entity* enemy) {
 
 static void fireEnemyBullet(const Entity* enemy) {
   Entity* bullet;
-  bullet = EntityList_Add(&bullets, ENTITY_ENEMY_BULLET);
+
+  bullet = LinkedList_Add(&bullets, sizeof(Entity));
+  bullet->type = ENTITY_ENEMY_BULLET;
 
   Entity_SetTexture(bullet, &textures, TEXTURE_ENEMY_BULLET);
 
@@ -239,11 +249,14 @@ static void moveEntity(Entity* entity) {
   Entity_Move(entity, 1.0f);
 }
 
-static void drawEntity(Entity* entity) {
-  Entity_Render(entity, &textures);
+static void drawEntity(void* entity) {
+  Entity* e = (Entity*) entity;
+  Entity_Render(e, &textures);
 }
 
-static bool isBulletOutOfBoundsOrDead(const Entity* bullet) {
+static bool isBulletOutOfBoundsOrDead(const void* b) {
+  const Entity* bullet = (Entity*) b;
+  
   if (bullet->health == 0) {
     return true;
   }
@@ -252,7 +265,9 @@ static bool isBulletOutOfBoundsOrDead(const Entity* bullet) {
   return flags != OUT_OF_BOUNDS_NONE;
 }
 
-static bool isEnemyOutOfBoundsOrDead(const Entity* enemy) {
+static bool isEnemyOutOfBoundsOrDead(const void* e) {
+  Entity* enemy = (Entity*) e;
+  
   if (enemy->health == 0) {
     return true;
   }
@@ -260,7 +275,10 @@ static bool isEnemyOutOfBoundsOrDead(const Entity* enemy) {
   return Entity_IsToTheLeftOf(enemy, windowBounds.x);
 }
 
-static void checkCollision(Entity* e1, Entity* e2) {
+static void checkCollision(void* entity1, void* entity2) {
+  Entity* e1 = (Entity*) entity1;
+  Entity* e2 = (Entity*) entity2;
+  
   if (Entity_CheckCollision(e1, e2)) {
     e1->health = 0;
     e2->health = 0;
@@ -278,11 +296,11 @@ static void drawBackground(void) {
   int x;
 
   for (x = 0; x < windowBounds.w; x += windowBounds.w) {
-      dst.x = x;
-      dst.y = 0;
-      dst.w = windowBounds.w;
-      dst.h = windowBounds.h;
+    dst.x = x;
+    dst.y = 0;
+    dst.w = windowBounds.w;
+    dst.h = windowBounds.h;
 
-      Textures_RenderFull(&textures, TEXTURE_BACKGROUND, &dst);
+    Textures_RenderFull(&textures, TEXTURE_BACKGROUND, &dst);
   }
 }

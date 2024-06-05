@@ -16,7 +16,7 @@ static void Point2D_AddOne(void* point) {
   p->y += 1;
 }
 
-static void Point2D_Add(void* point1, const void* point2) {
+static void Point2D_Add(void* point1, void* point2) {
   Point2D* p = (Point2D*) point1;
   Point2D* q = (Point2D*) point2;
 
@@ -122,7 +122,7 @@ static void test_LinkedList_ForEachWith(void** state) {
   q->x = 4;
   q->y = 8;
 
-  const Point2D r = {.x = -2, .y = 16};
+  Point2D r = {.x = -2, .y = 16};
 
   LinkedList_ForEachWith(&list, &r, &Point2D_Add);
 

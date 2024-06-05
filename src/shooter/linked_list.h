@@ -21,8 +21,8 @@ void* LinkedList_Add(LinkedList* list, size_t size);
 
 void LinkedList_ForEach(LinkedList* list, void (*func)(void*));
 
-void LinkedList_ForEachWith(LinkedList* list, const void* other,
-			    void (*func)(void*, const void*));
+void LinkedList_ForEachWith(LinkedList* list, void* other,
+			    void (*func)(void*, void*));
 
 void LinkedList_ForEachAndPrune(LinkedList* list, void (*func)(void*),
 				bool (*shouldRemove)(const void*));
