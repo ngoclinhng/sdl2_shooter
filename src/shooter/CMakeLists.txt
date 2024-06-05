@@ -14,6 +14,7 @@ endif()
 
 set(SHOOTER_SRCS
   utils.c
+  linked_list.c
   game_context.c
   events.c
   textures.c
@@ -63,6 +64,7 @@ if (BUILD_TESTING)
       COMMAND ${CMAKE_BINARY_DIR}/tests/${TESTNAME}_test)
   endmacro()
 
+  shooter_test(linked_list linked_list.c)
   shooter_test(entity entity.c textures.c)
   shooter_test(game_context game_context.c)
 endif()
