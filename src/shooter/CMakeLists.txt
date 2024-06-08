@@ -19,6 +19,7 @@ set(SHOOTER_SRCS
   events.c
   textures.c
   entity.c
+  star_field.c
   game_world.c
   frame_rate.c
   main.c)
