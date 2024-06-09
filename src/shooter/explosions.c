@@ -26,7 +26,7 @@ void Explosions_Free(void) {
   LinkedList_Free(&explosions);
 }
 
-void Explosions_Add(int x, int y) {
+void Explosions_Add(ExplosionType type, int x, int y) {
   Explosion* e;
 
   for (int i = 0; i < 32; ++i) {
@@ -43,17 +43,20 @@ void Explosions_Add(int x, int y) {
 
     switch(randomInt(0, 3)) {
     case 0:
-      e->color.r = 255;
+      e->color.r = (type == EXPLOSION_RED) ? 255 : 0;
+      e->color.b = (type == EXPLOSION_BLUE) ? 255 : 0;
       break;
 
     case 1:
-      e->color.r = 255;
+      e->color.r = (type == EXPLOSION_RED) ? 255 : 0;
+      e->color.b = (type == EXPLOSION_BLUE) ? 255 : 0;
       e->color.g = 128;
       break;
 
     case 2:
-      e->color.r = 255;
-      e->color.g = 255;
+      e->color.r = (type == EXPLOSION_RED) ? 255 : 0;
+      e->color.b = (type == EXPLOSION_BLUE) ? 255 : 0;
+      e->color.g = 255;      
       break;
 
     default:

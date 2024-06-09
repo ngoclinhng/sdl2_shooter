@@ -192,7 +192,7 @@ static void updateBullet(void* b) {
       Entity_CheckCollision(bullet, &player)) {    
     player.health = 0;
     bullet->health = 0;
-    Explosions_Add(player.hitbox.x, player.hitbox.y);
+    Explosions_Add(EXPLOSION_RED, player.hitbox.x, player.hitbox.y);
     return;
   }
 
@@ -303,7 +303,12 @@ static void checkCollision(void* entity1, void* entity2) {
   if (Entity_CheckCollision(e1, e2)) {
     e1->health = 0;
     e2->health = 0;
-    Explosions_Add(e1->hitbox.x, e1->hitbox.y);
+
+    if (e1->type == ENTITY_PLAYER) {
+      Explosions_Add(EXPLOSION_RED, e1->hitbox.x, e1->hitbox.y);
+    } else if (e1->type == ENTITY_ENEMY) {
+      Explosions_Add(EXPLOSION_BLUE, e1->hitbox.x, e1->hitbox.y);
+    }
   }
 }
 
