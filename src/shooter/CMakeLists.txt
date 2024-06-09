@@ -20,8 +20,9 @@ set(SHOOTER_SRCS
   textures.c
   entity.c
   star_field.c
+  explosions.c
   game_world.c
-  frame_rate.c
+  frame_rate.c  
   main.c)
 
 add_executable(shooter ${SHOOTER_SRCS})

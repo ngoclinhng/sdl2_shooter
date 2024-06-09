@@ -8,6 +8,7 @@ typedef enum TextureType {
   TEXTURE_PLAYER_BULLET,
   TEXTURE_ENEMY,
   TEXTURE_ENEMY_BULLET,
+  TEXTURE_EXPLOSION,
   TEXTURE_BACKGROUND,
   TEXTURE_COUNT
 } TextureType;
@@ -22,6 +23,7 @@ void Textures_Free(Textures* self);
 
 void Textures_LoadAndStore(Textures* self, TextureType type);
 void Textures_GetSize(Textures* self, TextureType type, int* w, int* h);
+SDL_Texture* Textures_Get(Textures* self, TextureType type);
 
 void Textures_RenderFull(Textures* self, TextureType type,
 			 const SDL_Rect* dst);

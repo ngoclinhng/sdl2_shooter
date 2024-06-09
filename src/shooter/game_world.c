@@ -2,6 +2,7 @@
 #include "shooter/defs.h"
 #include "shooter/linked_list.h"
 #include "shooter/star_field.h"
+#include "shooter/explosions.h"
 #include "shooter/game_world.h"
 #include "shooter/utils.h"
 
@@ -25,6 +26,7 @@ static StarField starField;
 static int enemySpawnTimer;
 static int gameWorldResetTimer;
 static int backgroundX;
+static SDL_Texture* explosionTexture;
 
 static void resetGameWorld(void);
 
@@ -56,16 +58,21 @@ void GameWorld_Init(GameContext* context) {
   Textures_LoadAndStore(&textures, TEXTURE_PLAYER_BULLET);
   Textures_LoadAndStore(&textures, TEXTURE_ENEMY);
   Textures_LoadAndStore(&textures, TEXTURE_ENEMY_BULLET);
-  Textures_LoadAndStore(&textures, TEXTURE_BACKGROUND);
+  Textures_LoadAndStore(&textures, TEXTURE_EXPLOSION);
+  Textures_LoadAndStore(&textures, TEXTURE_BACKGROUND);  
   
   LinkedList_Init(&bullets);
   LinkedList_Init(&enemies);
   StarField_Init(&starField, 400, windowBounds.w, windowBounds.h);
+
+  explosionTexture = Textures_Get(&textures, TEXTURE_EXPLOSION);
+  Explosions_Init();
   
   resetGameWorld();
 }
 
 void GameWorld_Free() {
+  Explosions_Free();
   LinkedList_Free(&bullets);
   LinkedList_Free(&enemies);
   StarField_Free(&starField);
@@ -82,7 +89,8 @@ void GameWorld_Update(const Events* events) {
   
   updatePlayer(events);
   updateEnemies();
-  updateBullets();  
+  updateBullets();
+  Explosions_Update();
   spawnEnemy();
 
   if (player.health <= 0 && --gameWorldResetTimer <= 0) {
@@ -95,8 +103,9 @@ void GameWorld_Draw() {
   StarField_Draw(&starField, textures.renderer);
   
   drawEntity(&player);
+  LinkedList_ForEach(&enemies, &drawEntity);  
   LinkedList_ForEach(&bullets, &drawEntity);
-  LinkedList_ForEach(&enemies, &drawEntity);
+  Explosions_Draw(textures.renderer, explosionTexture);
 }
 
 // Helpers
@@ -104,6 +113,7 @@ void GameWorld_Draw() {
 static void resetGameWorld(void) {  
   initPlayer();
 
+  Explosions_Free();
   LinkedList_Free(&bullets);
   LinkedList_Free(&enemies);
 
@@ -182,6 +192,7 @@ static void updateBullet(void* b) {
       Entity_CheckCollision(bullet, &player)) {    
     player.health = 0;
     bullet->health = 0;
+    Explosions_Add(player.hitbox.x, player.hitbox.y);
     return;
   }
 
@@ -292,6 +303,7 @@ static void checkCollision(void* entity1, void* entity2) {
   if (Entity_CheckCollision(e1, e2)) {
     e1->health = 0;
     e2->health = 0;
+    Explosions_Add(e1->hitbox.x, e1->hitbox.y);
   }
 }
 

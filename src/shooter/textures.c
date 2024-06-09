@@ -13,6 +13,7 @@ static const TextureMap textureMaps[] = {
   {TEXTURE_PLAYER_BULLET, "gfx/playerBullet.png"},
   {TEXTURE_ENEMY, "gfx/enemy.png"},
   {TEXTURE_ENEMY_BULLET, "gfx/enemyBullet.png"},
+  {TEXTURE_EXPLOSION, "gfx/explosion.png"},
   {TEXTURE_BACKGROUND, "gfx/background.png"}
 };
 
@@ -50,6 +51,12 @@ void Textures_GetSize(Textures* self, TextureType type, int* w, int* h) {
   SDL_Texture* texture = getTexture(self, type);
   assert(texture != NULL);
   SDL_QueryTexture(texture, NULL, NULL, w, h);
+}
+
+SDL_Texture* Textures_Get(Textures* self, TextureType type) {
+  SDL_Texture* texture = getTexture(self, type);
+  assert(texture != NULL);
+  return texture;
 }
 
 void Textures_RenderFull(Textures* self, TextureType type,
