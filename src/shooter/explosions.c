@@ -38,8 +38,8 @@ void Explosions_Add(int x, int y) {
     e->dx = randomInt(-9, 9);
     e->dy = randomInt(-9, 9);
 
-    e->dx /= 10;
-    e->dy /= 10;
+    e->dx /= 10.0f;
+    e->dy /= 10.0f;
 
     switch(randomInt(0, 3)) {
     case 0:
