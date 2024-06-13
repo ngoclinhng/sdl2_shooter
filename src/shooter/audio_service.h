@@ -4,11 +4,15 @@
 #include <SDL2/SDL_mixer.h>
 
 typedef enum SoundType {
-  BACKGROUND_MUSIC
+  BACKGROUND_MUSIC,
+  PLAYER_BULLET_SOUND,
+  ENEMY_EXPLOSION_SOUND
 } SoundType;
 
 typedef struct AudioService {
   Mix_Music* backgroundMusic;
+  Mix_Chunk* playerBulletSound;
+  Mix_Chunk* enemyExplosionSound;
 } AudioService;
 
 void AudioService_Init(AudioService* service);

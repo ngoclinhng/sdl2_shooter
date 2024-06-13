@@ -163,6 +163,7 @@ static void updatePlayer(const Events* events) {
 
   if (Events_IsActive(events, EVENT_FIRE) && player.reloadTime <= 0) {
     firePlayerBullet();
+    AudioService_Play(&audio, PLAYER_BULLET_SOUND);
   }
 
   moveEntity(&player);
@@ -314,6 +315,7 @@ static void checkCollision(void* entity1, void* entity2) {
       Explosions_Add(EXPLOSION_RED, e1->hitbox.x, e1->hitbox.y);
     } else if (e1->type == ENTITY_ENEMY) {
       Explosions_Add(EXPLOSION_BLUE, e1->hitbox.x, e1->hitbox.y);
+      AudioService_Play(&audio, ENEMY_EXPLOSION_SOUND);
     }
   }
 }
