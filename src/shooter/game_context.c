@@ -1,6 +1,7 @@
 #include <string.h>
 #include <assert.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_mixer.h>
 #include "shooter/game_context.h"
 
 void GameContext_Init(GameContext* ctx, const char* title, int width,
@@ -11,7 +12,7 @@ void GameContext_Init(GameContext* ctx, const char* title, int width,
   const int rendererFlags = SDL_RENDERER_ACCELERATED;  
   const int imgFlags = IMG_INIT_PNG | IMG_INIT_JPG;
 
-  if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
 		 "SDL could not initialize! SDL_Error: %s\n",
 		 SDL_GetError());
@@ -46,6 +47,15 @@ void GameContext_Init(GameContext* ctx, const char* title, int width,
 		 IMG_GetError());
     exit(1);
   }
+
+  if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+		 "Mix_OpenAudio: %s",
+		 Mix_GetError());
+    exit(1);
+  }
+
+  Mix_AllocateChannels(8);
 }
 
 void GameContext_PrepareScene(GameContext* ctx) {
@@ -68,6 +78,7 @@ void GameContext_Free(GameContext* ctx) {
     }
   }
 
+  Mix_CloseAudio();
   IMG_Quit();
   SDL_Quit();
 }

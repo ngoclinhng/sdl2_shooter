@@ -24,6 +24,7 @@ set(SHOOTER_SRCS
   game_context.c
   events.c
   textures.c
+  audio_service.c
   entity.c
   star_field.c
   explosions.c
@@ -48,6 +49,15 @@ add_custom_target(copy_gfx ALL
   COMMENT "Copying gfx directory to build directory")
 
 add_dependencies(shooter copy_gfx)
+
+set(SOUNDS_SOURCE_DIR "${Shooter_SOURCE_DIR}/sounds")
+set(SOUNDS_OUTPUT_DIR "${CMAKE_BINARY_DIR}/sounds")
+
+add_custom_target(copy_sounds ALL
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${SOUNDS_SOURCE_DIR} ${SOUNDS_OUTPUT_DIR}
+  COMMENT "Copying sounds directory to build directory")
+
+add_dependencies(shooter copy_sounds)
 
 if (BUILD_TESTING)
   macro(SHOOTER_TEST TESTNAME)

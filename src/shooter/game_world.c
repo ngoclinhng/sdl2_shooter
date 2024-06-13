@@ -4,6 +4,7 @@
 #include "shooter/star_field.h"
 #include "shooter/explosions.h"
 #include "shooter/game_world.h"
+#include "shooter/audio_service.h"
 #include "shooter/utils.h"
 
 static const SDL_Rect playerClipRect = {
@@ -27,6 +28,7 @@ static int enemySpawnTimer;
 static int gameWorldResetTimer;
 static int backgroundX;
 static SDL_Texture* explosionTexture;
+static AudioService audio;
 
 static void resetGameWorld(void);
 
@@ -67,11 +69,13 @@ void GameWorld_Init(GameContext* context) {
 
   explosionTexture = Textures_Get(&textures, TEXTURE_EXPLOSION);
   Explosions_Init();
+  AudioService_Init(&audio);
   
   resetGameWorld();
 }
 
 void GameWorld_Free() {
+  AudioService_Free(&audio);
   Explosions_Free();
   LinkedList_Free(&bullets);
   LinkedList_Free(&enemies);
@@ -122,6 +126,8 @@ static void resetGameWorld(void) {
   enemySpawnTimer = 0;
   gameWorldResetTimer = SHOOTER_FPS * 2;
   backgroundX = 0;
+
+  AudioService_Play(&audio, BACKGROUND_MUSIC);
 }
 
 static void initPlayer(void) {
