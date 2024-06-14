@@ -3,8 +3,13 @@
 
 #define SHOOTER_FPS 60
 
-#define SHOOTER_WINDOW_WIDTH 1280
-#define SHOOTER_WINDOW_HEIGHT 720
+// Uncomment this for other machines
+// #define SHOOTER_WINDOW_WIDTH 1280
+// #define SHOOTER_WINDOW_HEIGHT 720
+
+// Resonably good resolution for MacOS Pro 13 inch.
+#define SHOOTER_WINDOW_WIDTH 960
+#define SHOOTER_WINDOW_HEIGHT 540
 
 #define SHOOTER_PLAYER_SPEED 4
 #define SHOOTER_PLAYER_BULLET_SPEED 16

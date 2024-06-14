@@ -8,7 +8,7 @@ void GameContext_Init(GameContext* ctx, const char* title, int width,
 		      int height) {
   memset(ctx, 0, sizeof(GameContext));
 
-  const int windowFlags = 0;
+  const int windowFlags = SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI;
   const int rendererFlags = SDL_RENDERER_ACCELERATED;  
   const int imgFlags = IMG_INIT_PNG | IMG_INIT_JPG;
 
@@ -31,6 +31,7 @@ void GameContext_Init(GameContext* ctx, const char* title, int width,
     exit(1);
   }
 
+
   SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
   ctx->renderer = SDL_CreateRenderer(ctx->window, -1, rendererFlags);
 
@@ -39,6 +40,18 @@ void GameContext_Init(GameContext* ctx, const char* title, int width,
 		 "Renderer could not be created! SDL_Error: %s\n",
 		 SDL_GetError());
     exit(1);
+  }
+ 
+  // Get true drawable area.
+  // https://wiki.libsdl.org/SDL2/SDL_GetRendererOutputSize
+  if (SDL_GetRendererOutputSize(ctx->renderer,
+				&ctx->windowWidth,
+				&ctx->windowHeight) < 0) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+		 "SDL_GetRendererOutputSize: %s",
+		 SDL_GetError());
+    ctx->windowWidth = width;
+    ctx->windowHeight = height;
   }
 
   if ((IMG_Init(imgFlags) & imgFlags) != imgFlags) {

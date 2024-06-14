@@ -6,6 +6,7 @@
 typedef struct GameContext {
   SDL_Window* window;
   SDL_Renderer* renderer;
+  int windowWidth, windowHeight;
 } GameContext;
 
 void GameContext_Init(GameContext* ctx, const char* title, int w, int h);

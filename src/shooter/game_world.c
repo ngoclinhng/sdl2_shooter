@@ -7,15 +7,8 @@
 #include "shooter/audio_service.h"
 #include "shooter/utils.h"
 
-static const SDL_Rect playerClipRect = {
-  0, 0,
-  SHOOTER_WINDOW_WIDTH / 2, SHOOTER_WINDOW_HEIGHT
-};
-
-static const SDL_Rect windowBounds = {
-  0, 0,
-  SHOOTER_WINDOW_WIDTH, SHOOTER_WINDOW_HEIGHT
-};
+static SDL_Rect playerClipRect;
+static SDL_Rect windowBounds;
 
 static Textures textures;
 
@@ -54,6 +47,9 @@ static bool isEnemyOutOfBoundsOrDead(const void* enemy);
 static void checkCollision(void* entity1, void* entity2);
 
 void GameWorld_Init(GameContext* context) {
+  windowBounds = (SDL_Rect){0, 0, context->windowWidth, context->windowHeight};
+  playerClipRect = (SDL_Rect){0, 0, context->windowWidth / 2, context->windowHeight};
+  
   Textures_Init(&textures, context->renderer);
 
   Textures_LoadAndStore(&textures, TEXTURE_PLAYER);
